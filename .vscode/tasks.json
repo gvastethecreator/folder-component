@@ -1,0 +1,57 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "dev",
+      "type": "shell",
+      "command": "bun run dev",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "build",
+      "type": "shell",
+      "command": "bun run build"
+    },
+    {
+      "label": "preview",
+      "type": "shell",
+      "command": "bun run preview",
+      "isBackground": true
+    },
+    {
+      "label": "typecheck",
+      "type": "shell",
+      "command": "bun run typecheck"
+    },
+    {
+      "label": "lint",
+      "type": "shell",
+      "command": "bun run lint"
+    },
+    {
+      "label": "format:check",
+      "type": "shell",
+      "command": "bun run format:check"
+    },
+    {
+      "label": "test",
+      "type": "shell",
+      "command": "bun run test"
+    },
+    {
+      "label": "clean",
+      "type": "shell",
+      "command": "bun run clean"
+    },
+    {
+      "label": "check",
+      "dependsOn": ["lint", "format:check", "typecheck"],
+      "group": { "kind": "build", "isDefault": true }
+    },
+    {
+      "label": "verify",
+      "dependsOn": ["check", "test", "build"]
+    }
+  ]
+}
