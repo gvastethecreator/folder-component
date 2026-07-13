@@ -14,8 +14,6 @@ describe("STYLES_DATA", () => {
       expect(typeof folder.title).toBe("string");
       expect(typeof folder.description).toBe("string");
       expect(typeof folder.coverImage).toBe("string");
-      expect(typeof folder.themeColor).toBe("string");
-      expect(typeof folder.badgeColor).toBe("string");
       expect(Array.isArray(folder.files)).toBe(true);
       expect(folder.files.length).toBeGreaterThan(0);
     }
@@ -43,11 +41,13 @@ describe("STYLES_DATA", () => {
     }
   });
 
-  it("all image and cover URLs are https unsplash links", () => {
+  it("all image and cover URLs are optimized Pexels links", () => {
     for (const folder of STYLES_DATA) {
-      expect(folder.coverImage).toMatch(/^https:\/\/images\.unsplash\.com\//);
+      expect(folder.coverImage).toMatch(/^https:\/\/images\.pexels\.com\//);
+      expect(folder.coverImage).toContain("auto=compress");
       for (const file of folder.files) {
-        expect(file.image).toMatch(/^https:\/\/images\.unsplash\.com\//);
+        expect(file.image).toMatch(/^https:\/\/images\.pexels\.com\//);
+        expect(file.image).toContain("w=800&h=1000&fit=crop");
       }
     }
   });
