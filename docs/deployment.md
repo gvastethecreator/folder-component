@@ -9,7 +9,7 @@ The live playground is a GitHub Project Page at:
 `.github/workflows/pages.yml` runs on pushes to `main` and can also be started manually. It:
 
 1. installs the pinned Bun dependencies;
-2. runs typecheck, lint, formatting, unit tests, and dependency audit;
+2. runs typecheck, lint, formatting, unit tests, Chromium flows, and dependency audit;
 3. builds with the required Vite base path `/folder-component/`;
 4. uploads `dist/` as a Pages artifact;
 5. deploys through the `github-pages` environment.

@@ -1,21 +1,77 @@
 import { useEffect, useRef, useState } from "react";
-import { Check, ChevronDown, Code2, Copy, RefreshCw, SlidersHorizontal } from "lucide-react";
-import type { Dispatch, KeyboardEvent, ReactNode, SetStateAction } from "react";
+import {
+  IconActivity,
+  IconAdjustmentsHorizontal,
+  IconAlignLeft,
+  IconAlignRight,
+  IconArrowsHorizontal,
+  IconArrowsMaximize,
+  IconArrowsVertical,
+  IconBlur,
+  IconBorderRadius,
+  IconBorderStyle2,
+  IconBrandCss3,
+  IconBrandJavascript,
+  IconBrowser,
+  IconCards,
+  IconCheck,
+  IconChevronDown,
+  IconClock,
+  IconCode,
+  IconColorSwatch,
+  IconColumns3,
+  IconCopy,
+  IconDropletHalf,
+  IconEye,
+  IconEyeOff,
+  IconFolder,
+  IconGeometry,
+  IconGrain,
+  IconLock,
+  IconMoon,
+  IconPalette,
+  IconPhoto,
+  IconPlayerPlay,
+  IconPointer,
+  IconRectangle,
+  IconRectangleVertical,
+  IconRefresh,
+  IconSettings,
+  IconSparkles,
+  IconSpacingHorizontal,
+  IconSquare,
+  IconStack2,
+  IconSun,
+  IconTiltShift,
+  IconWaveSine,
+  IconWeight,
+} from "@tabler/icons-react";
+import type { ComponentType, Dispatch, KeyboardEvent, ReactNode, SetStateAction } from "react";
 import {
   ENGINE_CATALOG,
   ENGINE_CATALOG_LIST,
   buildPlaygroundSnippet,
 } from "../animation/engineCatalog";
+import {
+  DESIGN_PRESETS,
+  DESIGN_PRESET_LIST,
+  FOLDER_PALETTE_LIST,
+  type ActivePresetId,
+  type DesignPresetId,
+} from "../config/playgroundCatalog";
 import { FOLDER_DEPLOYMENTS, FOLDER_DEPLOYMENT_LABELS } from "../types";
 import type {
   AnimationEngine,
   CardStyle,
   ClickBehavior,
+  DeploymentMode,
   FanDirection,
   FolderShape,
   Orientation,
+  PaletteId,
   PlaygroundConfig,
   SpringSettings,
+  TabAlignment,
   TabFill,
   Theme,
   TransitionCurve,
@@ -48,6 +104,9 @@ async function writeClipboardText(value: string) {
 interface PlaygroundControlsProps {
   animationEngine: AnimationEngine;
   setAnimationEngine: Dispatch<SetStateAction<AnimationEngine>>;
+  activePresetId: ActivePresetId;
+  deploymentMode: DeploymentMode;
+  setDeploymentMode: Dispatch<SetStateAction<DeploymentMode>>;
   orientation: Orientation;
   setOrientation: Dispatch<SetStateAction<Orientation>>;
   springSettings: SpringSettings;
@@ -72,22 +131,56 @@ interface PlaygroundControlsProps {
   setFolderShape: Dispatch<SetStateAction<FolderShape>>;
   cardStyle: CardStyle;
   setCardStyle: Dispatch<SetStateAction<CardStyle>>;
+  gridItemSize: number;
+  setGridItemSize: Dispatch<SetStateAction<number>>;
   theme: Theme;
   setTheme: Dispatch<SetStateAction<Theme>>;
   textureEnabled: boolean;
   setTextureEnabled: Dispatch<SetStateAction<boolean>>;
+  noiseOpacity: number;
+  setNoiseOpacity: Dispatch<SetStateAction<number>>;
+  noiseScale: number;
+  setNoiseScale: Dispatch<SetStateAction<number>>;
   tabFill: TabFill;
   setTabFill: Dispatch<SetStateAction<TabFill>>;
   tabColor: string;
   setTabColor: Dispatch<SetStateAction<string>>;
+  tabWidth: number;
+  setTabWidth: Dispatch<SetStateAction<number>>;
+  tabHeight: number;
+  setTabHeight: Dispatch<SetStateAction<number>>;
+  tabAlignment: TabAlignment;
+  setTabAlignment: Dispatch<SetStateAction<TabAlignment>>;
+  labelVisible: boolean;
+  setLabelVisible: Dispatch<SetStateAction<boolean>>;
+  labelOpacity: number;
+  setLabelOpacity: Dispatch<SetStateAction<number>>;
+  labelBackdropBlur: number;
+  setLabelBackdropBlur: Dispatch<SetStateAction<number>>;
+  folderBorderWidth: number;
+  setFolderBorderWidth: Dispatch<SetStateAction<number>>;
+  folderBorderOpacity: number;
+  setFolderBorderOpacity: Dispatch<SetStateAction<number>>;
+  folderRadius: number;
+  setFolderRadius: Dispatch<SetStateAction<number>>;
+  paletteId: PaletteId;
+  setPaletteId: Dispatch<SetStateAction<PaletteId>>;
   visualSource: VisualSource;
   setVisualSource: Dispatch<SetStateAction<VisualSource>>;
   onReset: () => void;
+  onApplyPreset: (presetId: DesignPresetId) => void;
 }
+
+type ControlIcon = ComponentType<{
+  size?: string | number;
+  stroke?: string | number;
+  "aria-hidden"?: boolean;
+}>;
 
 interface SegmentOption<T extends string> {
   value: T;
   label: string;
+  icon?: ControlIcon;
 }
 
 function SegmentControl<T extends string>({
@@ -115,6 +208,7 @@ function SegmentControl<T extends string>({
             onClick={() => onChange(option.value)}
             className={`segment-button ${value === option.value ? "is-active" : ""}`}
           >
+            {option.icon && <option.icon size={12} stroke={1.7} aria-hidden />}
             {option.label}
           </button>
         ))}
@@ -134,6 +228,7 @@ function RangeControl({
   onChange,
   disabled = false,
   describedBy,
+  icon: Icon,
 }: {
   id: string;
   label: string;
@@ -145,6 +240,7 @@ function RangeControl({
   onChange: (value: number) => void;
   disabled?: boolean;
   describedBy?: string;
+  icon?: ControlIcon;
 }) {
   const animationFrame = useRef<number | null>(null);
   const pendingValue = useRef(value);
@@ -175,7 +271,10 @@ function RangeControl({
 
   return (
     <label htmlFor={id} className="range-control">
-      <span>{label}</span>
+      <span className="control-label">
+        {Icon && <Icon size={12} stroke={1.7} aria-hidden />}
+        {label}
+      </span>
       <output htmlFor={id}>{display ?? value}</output>
       <input
         id={id}
@@ -197,30 +296,53 @@ function ControlSection({
   title,
   children,
   open = false,
+  icon: Icon,
 }: {
   title: string;
   children: ReactNode;
   open?: boolean;
+  icon?: ControlIcon;
 }) {
   return (
     <details open={open} className="control-section">
       <summary>
-        {title}
-        <ChevronDown size={13} aria-hidden="true" />
+        <span>
+          {Icon && <Icon size={13} stroke={1.7} aria-hidden />}
+          {title}
+        </span>
+        <IconChevronDown size={13} stroke={1.7} aria-hidden />
       </summary>
       <div className="control-section-content">{children}</div>
     </details>
   );
 }
 
-const STACK_MAP = FOLDER_DEPLOYMENTS.map((deployment, index) => [
-  String(index + 1).padStart(2, "0"),
-  FOLDER_DEPLOYMENT_LABELS[deployment],
-]);
+function DeploymentPreview({ layout }: { layout: DeploymentMode }) {
+  return (
+    <span className="deployment-preview" data-layout={layout} aria-hidden="true">
+      <i />
+      <i />
+      <i />
+      <i />
+      <b />
+    </span>
+  );
+}
+
+const ENGINE_ICONS = {
+  gsap: IconBrandJavascript,
+  motion: IconActivity,
+  animejs: IconSparkles,
+  css: IconBrandCss3,
+  waapi: IconBrowser,
+} satisfies Record<AnimationEngine, ControlIcon>;
 
 export default function PlaygroundControls({
   animationEngine,
   setAnimationEngine,
+  activePresetId,
+  deploymentMode,
+  setDeploymentMode,
   orientation,
   setOrientation,
   springSettings,
@@ -245,17 +367,44 @@ export default function PlaygroundControls({
   setFolderShape,
   cardStyle,
   setCardStyle,
+  gridItemSize,
+  setGridItemSize,
   theme,
   setTheme,
   textureEnabled,
   setTextureEnabled,
+  noiseOpacity,
+  setNoiseOpacity,
+  noiseScale,
+  setNoiseScale,
   tabFill,
   setTabFill,
   tabColor,
   setTabColor,
+  tabWidth,
+  setTabWidth,
+  tabHeight,
+  setTabHeight,
+  tabAlignment,
+  setTabAlignment,
+  labelVisible,
+  setLabelVisible,
+  labelOpacity,
+  setLabelOpacity,
+  labelBackdropBlur,
+  setLabelBackdropBlur,
+  folderBorderWidth,
+  setFolderBorderWidth,
+  folderBorderOpacity,
+  setFolderBorderOpacity,
+  folderRadius,
+  setFolderRadius,
+  paletteId,
+  setPaletteId,
   visualSource,
   setVisualSource,
   onReset,
+  onApplyPreset,
 }: PlaygroundControlsProps) {
   const [activeTab, setActiveTab] = useState<"controls" | "code">("controls");
   const [copied, setCopied] = useState(false);
@@ -272,9 +421,10 @@ export default function PlaygroundControls({
   );
 
   const engine = ENGINE_CATALOG[animationEngine];
-  const physicsDisabled = transitionCurve === "tween";
+  const physicsDisabled = transitionCurve !== "spring";
   const codeSnippet = buildPlaygroundSnippet({
     animationEngine,
+    deploymentMode,
     orientation,
     springSettings,
     spacingMultiplier,
@@ -287,33 +437,25 @@ export default function PlaygroundControls({
     transitionCurve,
     folderShape,
     cardStyle,
+    gridItemSize,
     theme,
     textureEnabled,
+    noiseOpacity,
+    noiseScale,
     tabFill,
     tabColor,
+    tabWidth,
+    tabHeight,
+    tabAlignment,
+    labelVisible,
+    labelOpacity,
+    labelBackdropBlur,
+    folderBorderWidth,
+    folderBorderOpacity,
+    folderRadius,
+    paletteId,
     visualSource,
   } satisfies PlaygroundConfig);
-
-  const applyPreset = (preset: "balanced" | "cinematic" | "snappy") => {
-    if (preset === "cinematic") {
-      setSpringSettings({ stiffness: 115, damping: 18, mass: 1.25 });
-      setSpacingMultiplier(1.12);
-      setStaggerDelay(0.07);
-      setTransitionCurve("spring");
-      return;
-    }
-    if (preset === "snappy") {
-      setSpringSettings({ stiffness: 310, damping: 22, mass: 0.7 });
-      setSpacingMultiplier(0.92);
-      setStaggerDelay(0.015);
-      setTransitionCurve("spring");
-      return;
-    }
-    setSpringSettings({ stiffness: 185, damping: 14, mass: 1 });
-    setSpacingMultiplier(1);
-    setStaggerDelay(0.03);
-    setTransitionCurve("spring");
-  };
 
   const copyCode = async () => {
     try {
@@ -343,7 +485,7 @@ export default function PlaygroundControls({
       <header className="panel-header">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <SlidersHorizontal size={14} aria-hidden="true" />
+            <IconAdjustmentsHorizontal size={14} stroke={1.7} aria-hidden="true" />
             <h2>Playground</h2>
           </div>
           <p>{engine.statusLabel} · shared settings</p>
@@ -358,9 +500,35 @@ export default function PlaygroundControls({
           title="Reset settings"
           className="icon-button"
         >
-          <RefreshCw size={13} aria-hidden="true" />
+          <IconRefresh size={13} stroke={1.7} aria-hidden="true" />
         </button>
       </header>
+
+      <div className="preset-select">
+        <label htmlFor="design-preset">Design &amp; behavior preset</label>
+        <select
+          id="design-preset"
+          value={activePresetId}
+          onChange={(event) => {
+            const presetId = event.target.value as DesignPresetId;
+            onApplyPreset(presetId);
+          }}
+        >
+          <option value="custom" disabled>
+            Custom settings
+          </option>
+          {DESIGN_PRESET_LIST.map((preset) => (
+            <option key={preset.id} value={preset.id}>
+              {preset.label}
+            </option>
+          ))}
+        </select>
+        <small aria-live="polite">
+          {activePresetId === "custom"
+            ? "Manual settings differ from every saved preset."
+            : DESIGN_PRESETS[activePresetId].description}
+        </small>
+      </div>
 
       <div
         role="tablist"
@@ -378,6 +546,7 @@ export default function PlaygroundControls({
           tabIndex={activeTab === "controls" ? 0 : -1}
           onClick={() => setActiveTab("controls")}
         >
+          <IconSettings size={12} stroke={1.7} aria-hidden="true" />
           Controls
         </button>
         <button
@@ -390,7 +559,7 @@ export default function PlaygroundControls({
           tabIndex={activeTab === "code" ? 0 : -1}
           onClick={() => setActiveTab("code")}
         >
-          <Code2 size={12} aria-hidden="true" /> Code
+          <IconCode size={12} stroke={1.7} aria-hidden="true" /> Code
         </button>
       </div>
 
@@ -402,41 +571,45 @@ export default function PlaygroundControls({
           aria-labelledby="controls-tab"
           className="custom-scrollbar min-h-0 flex-1 overflow-y-auto px-3"
         >
-          <section className="stack-map" aria-labelledby="stack-map-title">
-            <div className="stack-map-heading">
-              <h3 id="stack-map-title">Stack map</h3>
-              <span>Cycles every 5 folders</span>
+          <section className="deployment-picker" aria-labelledby="deployment-picker-title">
+            <div className="deployment-picker-heading">
+              <h3 id="deployment-picker-title">Expansion layout</h3>
+              <span>Whole grid</span>
             </div>
-            <div aria-label="Animation order repeated every five folders">
-              {STACK_MAP.map(([index, label]) => (
-                <span key={index} title={label}>
-                  <b>{index}</b> {label}
-                </span>
+            <div role="group" aria-label="Expansion layout">
+              <button
+                type="button"
+                aria-pressed={deploymentMode === "random"}
+                onClick={() => setDeploymentMode("random")}
+              >
+                <DeploymentPreview layout="random" />
+                <span>Random</span>
+              </button>
+              {FOLDER_DEPLOYMENTS.map((deployment) => (
+                <button
+                  key={deployment}
+                  type="button"
+                  aria-pressed={deploymentMode === deployment}
+                  onClick={() => setDeploymentMode(deployment)}
+                >
+                  <DeploymentPreview layout={deployment} />
+                  <span>{FOLDER_DEPLOYMENT_LABELS[deployment]}</span>
+                </button>
               ))}
             </div>
           </section>
 
-          <div className="preset-strip" aria-label="Shared presets">
-            {(
-              [
-                ["balanced", "Balanced"],
-                ["cinematic", "Cinematic"],
-                ["snappy", "Snappy"],
-              ] as const
-            ).map(([value, label]) => (
-              <button key={value} type="button" onClick={() => applyPreset(value)}>
-                {label}
-              </button>
-            ))}
-          </div>
-
-          <ControlSection title="Animation engine" open>
+          <ControlSection title="Animation engine" icon={IconPlayerPlay} open>
             <SegmentControl
               label="Engine"
               value={animationEngine}
               onChange={setAnimationEngine}
               className="engine-selector"
-              options={ENGINE_CATALOG_LIST.map(({ id, label }) => ({ value: id, label }))}
+              options={ENGINE_CATALOG_LIST.map(({ id, label }) => ({
+                value: id,
+                label,
+                icon: ENGINE_ICONS[id],
+              }))}
             />
             <p className="engine-description" aria-live="polite">
               {engine.description}
@@ -446,15 +619,15 @@ export default function PlaygroundControls({
             </p>
           </ControlSection>
 
-          <ControlSection title="Appearance" open>
+          <ControlSection title="Appearance" icon={IconPalette} open>
             <div className="grid grid-cols-2 gap-2">
               <SegmentControl
                 label="Theme"
                 value={theme}
                 onChange={setTheme}
                 options={[
-                  { value: "dark", label: "Dark" },
-                  { value: "light", label: "Light" },
+                  { value: "dark", label: "Dark", icon: IconMoon },
+                  { value: "light", label: "Light", icon: IconSun },
                 ]}
               />
               <SegmentControl
@@ -462,8 +635,8 @@ export default function PlaygroundControls({
                 value={visualSource}
                 onChange={setVisualSource}
                 options={[
-                  { value: "image", label: "Images" },
-                  { value: "tone", label: "Tones" },
+                  { value: "image", label: "Images", icon: IconPhoto },
+                  { value: "tone", label: "Tones", icon: IconColorSwatch },
                 ]}
               />
             </div>
@@ -473,11 +646,49 @@ export default function PlaygroundControls({
               value={folderShape}
               onChange={setFolderShape}
               options={[
-                { value: "vertical", label: "Portrait" },
-                { value: "square", label: "Square" },
-                { value: "horizontal", label: "Wide" },
+                { value: "vertical", label: "Portrait", icon: IconRectangleVertical },
+                { value: "square", label: "Square", icon: IconSquare },
+                { value: "horizontal", label: "Wide", icon: IconRectangle },
               ]}
             />
+
+            <RangeControl
+              id="grid-item-size"
+              label="Grid density"
+              icon={IconColumns3}
+              value={gridItemSize}
+              display={`${gridItemSize}px · auto`}
+              min={96}
+              max={200}
+              step={4}
+              onChange={setGridItemSize}
+            />
+
+            <fieldset className="palette-control">
+              <legend className="control-kicker">Palette</legend>
+              <div className="palette-grid">
+                {FOLDER_PALETTE_LIST.map((palette) => (
+                  <button
+                    key={palette.id}
+                    type="button"
+                    aria-pressed={paletteId === palette.id}
+                    title={palette.label}
+                    onClick={() => {
+                      setPaletteId(palette.id);
+                      setTabFill("color");
+                      setTabColor(palette.colors[0]);
+                    }}
+                  >
+                    <span aria-hidden="true">
+                      {palette.colors.map((color) => (
+                        <i key={color} style={{ backgroundColor: color }} />
+                      ))}
+                    </span>
+                    {palette.label}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
 
             <div className="grid grid-cols-2 gap-2">
               <SegmentControl
@@ -485,8 +696,8 @@ export default function PlaygroundControls({
                 value={cardStyle}
                 onChange={setCardStyle}
                 options={[
-                  { value: "folder", label: "Folder" },
-                  { value: "classic", label: "Clean" },
+                  { value: "folder", label: "Folder", icon: IconFolder },
+                  { value: "classic", label: "Clean", icon: IconSquare },
                 ]}
               />
               <SegmentControl
@@ -494,9 +705,9 @@ export default function PlaygroundControls({
                 value={clickBehavior}
                 onChange={setClickBehavior}
                 options={[
-                  { value: "pulse", label: "Pulse" },
-                  { value: "toggle", label: "Lock" },
-                  { value: "flash", label: "Flash" },
+                  { value: "pulse", label: "Pulse", icon: IconPointer },
+                  { value: "toggle", label: "Lock", icon: IconLock },
+                  { value: "flash", label: "Flash", icon: IconSparkles },
                 ]}
               />
             </div>
@@ -508,8 +719,8 @@ export default function PlaygroundControls({
                   value={tabFill}
                   onChange={setTabFill}
                   options={[
-                    { value: "image", label: "Artwork" },
-                    { value: "color", label: "Color" },
+                    { value: "image", label: "Artwork", icon: IconPhoto },
+                    { value: "color", label: "Color", icon: IconColorSwatch },
                   ]}
                 />
                 {tabFill === "color" && (
@@ -527,6 +738,130 @@ export default function PlaygroundControls({
               </div>
             )}
 
+            {cardStyle === "folder" && (
+              <>
+                <SegmentControl
+                  label="Tab alignment"
+                  value={tabAlignment}
+                  onChange={setTabAlignment}
+                  options={[
+                    { value: "left", label: "Left", icon: IconAlignLeft },
+                    { value: "right", label: "Right", icon: IconAlignRight },
+                  ]}
+                />
+                <div className="grid grid-cols-2 gap-3">
+                  <RangeControl
+                    id="tab-width"
+                    label="Tab width"
+                    icon={IconArrowsHorizontal}
+                    value={tabWidth}
+                    display={`${tabWidth}%`}
+                    min={24}
+                    max={78}
+                    step={2}
+                    onChange={setTabWidth}
+                  />
+                  <RangeControl
+                    id="tab-height"
+                    label="Tab height"
+                    icon={IconArrowsVertical}
+                    value={tabHeight}
+                    display={`${tabHeight}px`}
+                    min={6}
+                    max={24}
+                    step={1}
+                    onChange={setTabHeight}
+                  />
+                </div>
+              </>
+            )}
+
+            <button
+              type="button"
+              role="switch"
+              aria-checked={labelVisible}
+              onClick={() => setLabelVisible((current) => !current)}
+              className="switch-row"
+            >
+              <span className="switch-copy">
+                {labelVisible ? (
+                  <IconEye size={14} aria-hidden />
+                ) : (
+                  <IconEyeOff size={14} aria-hidden />
+                )}
+                <span>
+                  Text container
+                  <small>Title and item count overlay</small>
+                </span>
+              </span>
+              <i aria-hidden="true">
+                <span />
+              </i>
+            </button>
+
+            {labelVisible && (
+              <div className="grid grid-cols-2 gap-3">
+                <RangeControl
+                  id="label-opacity"
+                  label="Label opacity"
+                  icon={IconDropletHalf}
+                  value={labelOpacity}
+                  display={`${Math.round(labelOpacity * 100)}%`}
+                  min={0}
+                  max={1}
+                  step={0.05}
+                  onChange={setLabelOpacity}
+                />
+                <RangeControl
+                  id="label-blur"
+                  label="Backdrop blur"
+                  icon={IconBlur}
+                  value={labelBackdropBlur}
+                  display={`${labelBackdropBlur}px`}
+                  min={0}
+                  max={24}
+                  step={1}
+                  onChange={setLabelBackdropBlur}
+                />
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-3">
+              <RangeControl
+                id="border-width"
+                label="Border size"
+                icon={IconBorderStyle2}
+                value={folderBorderWidth}
+                display={`${folderBorderWidth.toFixed(1)}px`}
+                min={0}
+                max={4}
+                step={0.5}
+                onChange={setFolderBorderWidth}
+              />
+              <RangeControl
+                id="border-opacity"
+                label="Border opacity"
+                icon={IconDropletHalf}
+                value={folderBorderOpacity}
+                display={`${Math.round(folderBorderOpacity * 100)}%`}
+                min={0}
+                max={1}
+                step={0.05}
+                onChange={setFolderBorderOpacity}
+              />
+            </div>
+            <RangeControl
+              id="folder-radius"
+              label="Corner radius"
+              icon={IconBorderRadius}
+              value={folderRadius}
+              display={`${folderRadius}px`}
+              min={0}
+              max={24}
+              step={1}
+              onChange={setFolderRadius}
+            />
+
             <button
               type="button"
               role="switch"
@@ -534,18 +869,49 @@ export default function PlaygroundControls({
               onClick={() => setTextureEnabled((current) => !current)}
               className="switch-row"
             >
-              <span>
-                SVG noise
-                <small>Fine texture on the app background</small>
+              <span className="switch-copy">
+                <IconGrain size={14} aria-hidden />
+                <span>
+                  SVG noise
+                  <small>Fine texture on the app background</small>
+                </span>
               </span>
               <i aria-hidden="true">
                 <span />
               </i>
             </button>
 
+            {textureEnabled && (
+              <div className="grid grid-cols-2 gap-3">
+                <RangeControl
+                  id="noise-opacity"
+                  label="Noise intensity"
+                  icon={IconDropletHalf}
+                  value={noiseOpacity}
+                  display={`${Math.round(noiseOpacity * 100)}%`}
+                  min={0}
+                  max={1}
+                  step={0.05}
+                  onChange={setNoiseOpacity}
+                />
+                <RangeControl
+                  id="noise-scale"
+                  label="Noise scale"
+                  icon={IconArrowsMaximize}
+                  value={noiseScale}
+                  display={`${noiseScale}px`}
+                  min={80}
+                  max={320}
+                  step={10}
+                  onChange={setNoiseScale}
+                />
+              </div>
+            )}
+
             <RangeControl
               id="visible-cards"
               label="Visible cards"
+              icon={IconCards}
               value={visibleCardsCount}
               min={1}
               max={5}
@@ -554,15 +920,15 @@ export default function PlaygroundControls({
             />
           </ControlSection>
 
-          <ControlSection title="Geometry" open>
+          <ControlSection title="Geometry" icon={IconGeometry} open>
             <div className="grid grid-cols-2 gap-2">
               <SegmentControl
                 label="Axis"
                 value={orientation}
                 onChange={setOrientation}
                 options={[
-                  { value: "vertical", label: "Vertical" },
-                  { value: "horizontal", label: "Horizontal" },
+                  { value: "vertical", label: "Vertical", icon: IconArrowsVertical },
+                  { value: "horizontal", label: "Horizontal", icon: IconArrowsHorizontal },
                 ]}
               />
               <SegmentControl
@@ -570,15 +936,16 @@ export default function PlaygroundControls({
                 value={fanDirection}
                 onChange={setFanDirection}
                 options={[
-                  { value: "left", label: "Left" },
-                  { value: "symmetrical", label: "Center" },
-                  { value: "right", label: "Right" },
+                  { value: "left", label: "Left", icon: IconAlignLeft },
+                  { value: "symmetrical", label: "Center", icon: IconSpacingHorizontal },
+                  { value: "right", label: "Right", icon: IconAlignRight },
                 ]}
               />
             </div>
             <RangeControl
               id="spacing"
               label="Spacing"
+              icon={IconSpacingHorizontal}
               value={spacingMultiplier}
               display={`${spacingMultiplier.toFixed(2)}×`}
               min={0.55}
@@ -589,6 +956,7 @@ export default function PlaygroundControls({
             <RangeControl
               id="fan-angle"
               label="Fan angle"
+              icon={IconWaveSine}
               value={fanAngle}
               display={`${fanAngle}°`}
               min={0}
@@ -599,6 +967,7 @@ export default function PlaygroundControls({
             <RangeControl
               id="cover-tilt"
               label="Cover depth"
+              icon={IconTiltShift}
               value={coverTilt}
               display={`${Math.abs(coverTilt)}`}
               min={-24}
@@ -608,19 +977,23 @@ export default function PlaygroundControls({
             />
           </ControlSection>
 
-          <ControlSection title="Motion">
+          <ControlSection title="Motion" icon={IconActivity}>
             <SegmentControl
               label="Curve"
               value={transitionCurve}
               onChange={setTransitionCurve}
+              className="curve-selector"
               options={[
-                { value: "spring", label: "Spring" },
-                { value: "tween", label: "Tween" },
+                { value: "spring", label: "Spring", icon: IconActivity },
+                { value: "tween", label: "Tween", icon: IconWaveSine },
+                { value: "bounce", label: "Bounce", icon: IconStack2 },
+                { value: "elastic", label: "Elastic", icon: IconArrowsMaximize },
               ]}
             />
             <RangeControl
               id="stagger"
               label="Stagger"
+              icon={IconClock}
               value={staggerDelay}
               display={`${Math.round(staggerDelay * 1000)}ms`}
               min={0}
@@ -634,7 +1007,7 @@ export default function PlaygroundControls({
               role={physicsDisabled ? "status" : undefined}
             >
               {physicsDisabled
-                ? "Tween uses fixed duration and easing. Stiffness, damping, and mass are disabled; switching back to Spring restores their values."
+                ? `${transitionCurve[0].toUpperCase()}${transitionCurve.slice(1)} uses a tuned timing profile. Spring physics controls are preserved and disabled until Spring is selected.`
                 : engine.springCapability}
             </p>
             <fieldset disabled={physicsDisabled} aria-describedby="spring-physics-note">
@@ -642,6 +1015,7 @@ export default function PlaygroundControls({
               <RangeControl
                 id="stiffness"
                 label="Stiffness"
+                icon={IconWeight}
                 value={springSettings.stiffness}
                 min={60}
                 max={360}
@@ -655,6 +1029,7 @@ export default function PlaygroundControls({
               <RangeControl
                 id="damping"
                 label="Damping"
+                icon={IconWaveSine}
                 value={springSettings.damping}
                 min={6}
                 max={32}
@@ -668,6 +1043,7 @@ export default function PlaygroundControls({
               <RangeControl
                 id="mass"
                 label="Mass"
+                icon={IconWeight}
                 value={springSettings.mass}
                 display={springSettings.mass.toFixed(2)}
                 min={0.4}
@@ -689,14 +1065,14 @@ export default function PlaygroundControls({
         >
           <div className="code-panel-header">
             <div>
-              <h3>Five-stack usage</h3>
-              <p>One deployment per position in the five-folder cycle.</p>
+              <h3>Grid usage</h3>
+              <p>Random or fixed deployment, shared across every animation engine.</p>
             </div>
             <button type="button" onClick={copyCode} aria-label="Copy reusable code">
               {copied ? (
-                <Check size={12} aria-hidden="true" />
+                <IconCheck size={12} aria-hidden="true" />
               ) : (
-                <Copy size={12} aria-hidden="true" />
+                <IconCopy size={12} aria-hidden="true" />
               )}
               {copied ? "Copied" : "Copy"}
             </button>

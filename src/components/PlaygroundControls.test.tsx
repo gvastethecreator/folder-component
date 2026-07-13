@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import PlaygroundControls from "./PlaygroundControls";
 import type { SpringSettings } from "../types";
@@ -10,6 +10,9 @@ function makeProps() {
   return {
     animationEngine: "gsap" as const,
     setAnimationEngine: vi.fn(),
+    activePresetId: "balanced" as const,
+    deploymentMode: "random" as const,
+    setDeploymentMode: vi.fn(),
     orientation: "vertical" as const,
     setOrientation: vi.fn(),
     springSettings,
@@ -34,28 +37,59 @@ function makeProps() {
     setFolderShape: vi.fn(),
     cardStyle: "folder" as const,
     setCardStyle: vi.fn(),
+    gridItemSize: 128,
+    setGridItemSize: vi.fn(),
     theme: "dark" as const,
     setTheme: vi.fn(),
     textureEnabled: false,
     setTextureEnabled: vi.fn(),
+    noiseOpacity: 1,
+    setNoiseOpacity: vi.fn(),
+    noiseScale: 180,
+    setNoiseScale: vi.fn(),
     tabFill: "image" as const,
     setTabFill: vi.fn(),
     tabColor: "#737373",
     setTabColor: vi.fn(),
+    tabWidth: 50,
+    setTabWidth: vi.fn(),
+    tabHeight: 12,
+    setTabHeight: vi.fn(),
+    tabAlignment: "left" as const,
+    setTabAlignment: vi.fn(),
+    labelVisible: true,
+    setLabelVisible: vi.fn(),
+    labelOpacity: 0.9,
+    setLabelOpacity: vi.fn(),
+    labelBackdropBlur: 8,
+    setLabelBackdropBlur: vi.fn(),
+    folderBorderWidth: 1,
+    setFolderBorderWidth: vi.fn(),
+    folderBorderOpacity: 0.72,
+    setFolderBorderOpacity: vi.fn(),
+    folderRadius: 12,
+    setFolderRadius: vi.fn(),
+    paletteId: "graphite" as const,
+    setPaletteId: vi.fn(),
     visualSource: "image" as const,
     setVisualSource: vi.fn(),
     onReset: vi.fn(),
+    onApplyPreset: vi.fn(),
   };
 }
 
 describe("PlaygroundControls", () => {
-  it("renders a compact shared-controls panel with five fixed stack identities", () => {
+  it("renders a compact panel with random plus nine graphical layout controls", () => {
     render(<PlaygroundControls {...makeProps()} />);
 
     expect(screen.getByRole("tab", { name: /Controls/i })).toHaveAttribute("aria-selected", "true");
-    expect(screen.getByLabelText(/Animation order repeated every five folders/i)).toHaveTextContent(
-      "01 Fan02 Depth03 Cascade04 Scatter05 Side",
+    const layoutGroup = screen.getByRole("group", { name: "Expansion layout" });
+    expect(within(layoutGroup).getAllByRole("button")).toHaveLength(10);
+    expect(within(layoutGroup).getByRole("button", { name: "Random" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
     );
+    expect(layoutGroup.querySelectorAll(".deployment-preview")).toHaveLength(10);
     for (const slider of screen.getAllByRole("slider")) {
       expect(slider).toHaveAccessibleName();
     }
@@ -110,7 +144,7 @@ describe("PlaygroundControls", () => {
     for (const name of ["Stiffness", "Damping", "Mass"]) {
       expect(screen.getByRole("slider", { name })).toBeDisabled();
     }
-    expect(screen.getByText(/Tween uses fixed duration and easing.*disabled/i)).toBeInTheDocument();
+    expect(screen.getByText(/Tween uses a tuned timing profile.*disabled/i)).toBeInTheDocument();
 
     rerender(<PlaygroundControls {...props} transitionCurve="spring" />);
     expect(screen.getByRole("slider", { name: "Stiffness" })).not.toBeDisabled();
@@ -132,27 +166,74 @@ describe("PlaygroundControls", () => {
     expect(screen.getByLabelText(/Folder tab color/i)).toHaveValue("#737373");
   });
 
-  it("applies motion presets without changing the five-folder cycle", async () => {
+  it("applies complete design and behavior presets from the top dropdown", async () => {
+    const user = userEvent.setup();
+    const props = makeProps();
+    const { rerender } = render(<PlaygroundControls {...props} />);
+
+    await user.selectOptions(screen.getByLabelText("Design & behavior preset"), "kinetic");
+    expect(props.onApplyPreset).toHaveBeenCalledWith("kinetic");
+    rerender(<PlaygroundControls {...props} activePresetId="kinetic" />);
+    expect(screen.getByText(/Anime\.js elastic energy/i)).toBeInTheDocument();
+  });
+
+  it("marks manual settings as custom instead of claiming a stale preset", () => {
+    render(<PlaygroundControls {...makeProps()} activePresetId="custom" />);
+
+    expect(screen.getByLabelText("Design & behavior preset")).toHaveValue("custom");
+    expect(screen.getByText(/Manual settings differ/i)).toBeInTheDocument();
+  });
+
+  it("renders miniature stack replicas for every deployment", () => {
+    render(<PlaygroundControls {...makeProps()} />);
+
+    const layoutGroup = screen.getByRole("group", { name: "Expansion layout" });
+    expect(layoutGroup.querySelector('[data-layout="random"]')).toBeInTheDocument();
+    expect(layoutGroup.querySelector('[data-layout="deck_split"]')).toBeInTheDocument();
+  });
+
+  it("selects a global expansion layout and a palette beside the color picker", async () => {
     const user = userEvent.setup();
     const props = makeProps();
     render(<PlaygroundControls {...props} />);
 
-    await user.click(screen.getByRole("button", { name: "Cinematic" }));
-    expect(props.setSpringSettings).toHaveBeenCalledWith({
-      stiffness: 115,
-      damping: 18,
-      mass: 1.25,
-    });
-    expect(props.setSpacingMultiplier).toHaveBeenCalledWith(1.12);
-    expect(props.setTransitionCurve).toHaveBeenCalledWith("spring");
+    await user.click(screen.getByRole("button", { name: "Orbit" }));
+    expect(props.setDeploymentMode).toHaveBeenCalledWith("orbit");
+
+    await user.click(screen.getByRole("button", { name: "Ocean" }));
+    expect(props.setPaletteId).toHaveBeenCalledWith("ocean");
+    expect(props.setTabFill).toHaveBeenCalledWith("color");
+    expect(props.setTabColor).toHaveBeenCalledWith("#22d3ee");
   });
 
-  it("renders the deployment map from the shared five-folder cycle", () => {
-    render(<PlaygroundControls {...makeProps()} />);
+  it("exposes tab, label, border, noise, and grid sizing controls", async () => {
+    const user = userEvent.setup();
+    const props = { ...makeProps(), textureEnabled: true };
+    render(<PlaygroundControls {...props} />);
 
-    expect(screen.getByLabelText(/Animation order repeated every five folders/i)).toHaveTextContent(
-      "01 Fan02 Depth03 Cascade04 Scatter05 Side",
+    await user.click(
+      within(screen.getByRole("group", { name: "Tab alignment" })).getByRole("button", {
+        name: "Right",
+      }),
     );
+    await user.click(screen.getByRole("switch", { name: /Text container/i }));
+
+    expect(props.setTabAlignment).toHaveBeenCalledWith("right");
+    expect(props.setLabelVisible).toHaveBeenCalledTimes(1);
+    for (const name of [
+      "Grid density",
+      "Tab width",
+      "Tab height",
+      "Label opacity",
+      "Backdrop blur",
+      "Border size",
+      "Border opacity",
+      "Corner radius",
+      "Noise intensity",
+      "Noise scale",
+    ]) {
+      expect(screen.getByRole("slider", { name })).toBeInTheDocument();
+    }
   });
 
   it("coalesces range updates to one shared-state change per animation frame", () => {
@@ -220,13 +301,14 @@ describe("PlaygroundControls", () => {
     }
   });
 
-  it("shows the reusable five-stack code example", async () => {
+  it("shows the reusable random-or-fixed grid code example", async () => {
     const user = userEvent.setup();
     render(<PlaygroundControls {...makeProps()} />);
 
     await user.click(screen.getByRole("tab", { name: /Code/i }));
-    expect(screen.getByText(/Five-stack usage/i)).toBeInTheDocument();
-    expect(screen.getByText(/horizontal_stack/, { selector: "code" })).toBeInTheDocument();
+    expect(screen.getByText(/Grid usage/i)).toBeInTheDocument();
+    expect(screen.getByText(/deploymentForKey/, { selector: "code" })).toBeInTheDocument();
+    expect(screen.getByText(/folderBorderOpacity/, { selector: "code" })).toBeInTheDocument();
   });
 
   it("supports the standard keyboard pattern for its tabs", () => {

@@ -8,7 +8,12 @@ component: **GSAP**, **Motion**, **Anime.js**, pure **CSS**, and native **WAAPI*
 ## Features
 
 - Switch animation engines without changing folder geometry or content.
-- Tune spring/tween behavior, stagger, shape, spacing, and click feedback live.
+- Browse 20 curated folders with a different cover image on every folder.
+- Randomize the grid or force one of nine expansion layouts across every folder.
+- Scale a responsive 1–9 column grid through one folder-size/density control.
+- Apply six color palettes or a custom color from the native picker.
+- Tune tab size/alignment, label glass, border weight/opacity/radius, and SVG noise.
+- Load complete design and behavior presets from the top dropdown.
 - Copy a reusable React configuration from the Code panel.
 - Use keyboard, pointer, or touch interactions with reduced-motion support.
 - Keep working when remote Pexels images fail through deterministic neutral fallbacks.
@@ -37,6 +42,7 @@ bun run build
 
 ## Documentation
 
+- [Project readiness baseline](docs/project-readiness.md)
 - [Architecture and engine contract](docs/architecture.md)
 - [GitHub Pages deployment](docs/deployment.md)
 - [Known tradeoffs](docs/technical-debt.md)
@@ -46,7 +52,7 @@ variables. Pexels imagery is used under the [Pexels license](https://www.pexels.
 
 ## Status
 
-- Release-candidate checks cover 39 unit tests and 9 Chromium end-to-end scenarios.
+- Release-candidate checks cover 47 unit tests and 12 Chromium end-to-end scenarios.
 - Firefox, Safari, and manual screen-reader testing are not part of the automated baseline.
 - All five animation adapters are intentionally bundled together for instant comparison.
 

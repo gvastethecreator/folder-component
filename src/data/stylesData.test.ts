@@ -2,9 +2,9 @@ import { describe, it, expect } from "vitest";
 import { STYLES_DATA } from "./stylesData";
 
 describe("STYLES_DATA", () => {
-  it("is a non-empty array of folders", () => {
+  it("contains the twenty curated playground folders", () => {
     expect(Array.isArray(STYLES_DATA)).toBe(true);
-    expect(STYLES_DATA.length).toBeGreaterThan(0);
+    expect(STYLES_DATA).toHaveLength(20);
   });
 
   it("every folder has required fields and at least one file", () => {
@@ -39,6 +39,11 @@ describe("STYLES_DATA", () => {
       const fileIds = folder.files.map((f) => f.id);
       expect(new Set(fileIds).size).toBe(fileIds.length);
     }
+  });
+
+  it("uses a different cover image for every folder", () => {
+    const coverImages = STYLES_DATA.map((folder) => folder.coverImage);
+    expect(new Set(coverImages).size).toBe(STYLES_DATA.length);
   });
 
   it("all image and cover URLs are optimized Pexels links", () => {

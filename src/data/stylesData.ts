@@ -1,9 +1,9 @@
-import { FolderData } from "../types";
+import type { FolderData } from "../types";
 
 const pexels = (photoId: number) =>
   `https://images.pexels.com/photos/${photoId}/pexels-photo-${photoId}.jpeg?auto=compress&cs=tinysrgb&w=800&h=1000&fit=crop`;
 
-export const STYLES_DATA: FolderData[] = [
+const BASE_STYLE_GROUPS: FolderData[] = [
   {
     id: "cyberpunk",
     title: "Cyberpunk & Neon",
@@ -449,3 +449,32 @@ export const STYLES_DATA: FolderData[] = [
     ],
   },
 ];
+
+const VARIANT_TITLES = [
+  ["Neon Rain District", "Retro Grid Horizon", "Cybernetic Portraits", "Midnight Drifters"],
+  ["Summer Meadow", "Blossom Rail", "Misty Mountain", "Lantern Market"],
+  ["Sunflower Impasto", "Chromatic Vortex", "Venetian Reflections", "Storm Coast"],
+  ["Fluid Geometry", "Isometric Architecture", "Botanical Linework", "Desert Modernism"],
+  ["Midnight Boulevard", "Brass & Smoke", "Concrete Fluorescence", "Rainy Diner"],
+] as const;
+
+/**
+ * Twenty real gallery entries built from the curated source groups. Every folder receives
+ * a globally unique cover and locally unique card ids; no row is a repeated clone.
+ */
+export const STYLES_DATA: FolderData[] = BASE_STYLE_GROUPS.flatMap((group, groupIndex) =>
+  VARIANT_TITLES[groupIndex].map((title, coverIndex) => {
+    const rotatedFiles = [
+      ...group.files.slice(coverIndex),
+      ...group.files.slice(0, coverIndex),
+    ].map((file) => ({ ...file, id: `${group.id}-${coverIndex + 1}-${file.id}` }));
+
+    return {
+      ...group,
+      id: `${group.id}-${coverIndex + 1}`,
+      title,
+      coverImage: group.files[coverIndex].image,
+      files: rotatedFiles,
+    };
+  }),
+);

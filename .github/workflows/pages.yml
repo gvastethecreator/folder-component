@@ -35,6 +35,10 @@ jobs:
           bun run lint
           bun run format:check
           bun run test
+      - name: Install Chromium
+        run: bun run test:e2e:install -- --with-deps
+      - name: Verify browser flows
+        run: bun run test:e2e
       - name: Build GitHub Pages artifact
         run: bun run build:pages
       - name: Configure GitHub Pages
