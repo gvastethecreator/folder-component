@@ -1,8 +1,8 @@
-# Agent Guide — Image Style Folder Playground
+# Agent Guide — Folder Component
 
-Standalone static React 19 + Vite 8 (Rolldown) + Tailwind v4 + Motion single-page app.
+Standalone static React 19 + Vite 8 (Rolldown) + Tailwind v4 multi-engine playground.
 Pure frontend (no backend, no AI Studio, no API keys). Package manager/runtime: **Bun**.
-See `docs/project-readiness.md` for the current baseline and `README.md` for scripts.
+See `README.md` for the public entrypoint and `docs/architecture.md` for implementation details.
 
 ## Agent skills
 

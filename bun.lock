@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "image-style-folder-playground",
+      "name": "folder-component",
       "dependencies": {
         "@gsap/react": "2.1.2",
         "animejs": "^4.5.0",
