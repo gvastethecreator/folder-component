@@ -9,7 +9,7 @@ const engines = [
 ] as const;
 
 const folderSelector = '[role="button"][data-animation-engine]';
-const localBaseURL = `http://127.0.0.1:${process.env.PLAYWRIGHT_PORT ?? 4173}`;
+const localBaseURL = `http://127.0.0.1:${process.env.PLAYWRIGHT_PORT ?? 4191}`;
 
 async function openPlayground(page: Page) {
   await page.goto("/");
@@ -28,6 +28,16 @@ function columnCount(page: Page) {
     const firstRow = Math.min(...boxes.map(({ y }) => y));
     return new Set(boxes.filter(({ y }) => y <= firstRow + 8).map(({ x }) => x)).size;
   });
+}
+
+async function setRange(page: Page, name: string, value: number) {
+  await page.getByRole("slider", { name }).evaluate((element, nextValue) => {
+    const input = element as HTMLInputElement;
+    const valueSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+    valueSetter?.call(input, String(nextValue));
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  }, value);
 }
 
 test.describe("animation engines and interaction", () => {
@@ -63,11 +73,18 @@ test.describe("animation engines and interaction", () => {
   test("opens and closes a folder on pointer hover", async ({ page }) => {
     await openPlayground(page);
     const folder = page.locator(folderSelector).first();
+    const adjacentFolder = page.locator(folderSelector).nth(1);
+    await expect(folder).toHaveCSS("z-index", "1");
+    await expect(adjacentFolder).toHaveCSS("z-index", "1");
     await expect(folder).toHaveAttribute("aria-expanded", "false");
     await folder.hover();
     await expect(folder).toHaveAttribute("aria-expanded", "true");
+    await expect(folder).toHaveCSS("z-index", "50");
+    await expect(adjacentFolder).toHaveCSS("z-index", "1");
+    await page.screenshot({ path: "test-results/visual-proof-active-folder.png" });
     await page.mouse.move(1, 1);
     await expect(folder).toHaveAttribute("aria-expanded", "false");
+    await expect(folder).toHaveCSS("z-index", "1");
   });
 
   test("accepts touch tap on mobile viewport", async ({ browser }) => {
@@ -123,6 +140,106 @@ test.describe("animation engines and interaction", () => {
 });
 
 test.describe("playground controls", () => {
+  test("keeps every cover unique and applies presets, palettes, layouts, and curves", async ({
+    page,
+  }) => {
+    await openPlayground(page);
+    const folders = page.locator(folderSelector);
+    const covers = await folders.evaluateAll((nodes) =>
+      nodes.map((node) => node.getAttribute("data-cover-image")),
+    );
+    expect(new Set(covers).size).toBe(20);
+
+    await page.getByLabel("Design & behavior preset").selectOption("kinetic");
+    await expect(page.locator('[data-animation-engine="animejs"]')).toHaveCount(20);
+    await expect(page.locator('[data-deployment="burst"]')).toHaveCount(20);
+    await expect(page.locator('[data-palette="orchid"]')).toHaveCount(20);
+
+    await page
+      .getByRole("group", { name: "Palette" })
+      .getByRole("button", { name: "Ocean" })
+      .click();
+    await expect(page.locator('[data-palette="ocean"]')).toHaveCount(20);
+    await page
+      .getByRole("group", { name: "Expansion layout" })
+      .getByRole("button", { name: "Orbit" })
+      .click();
+    await expect(page.locator('[data-deployment="orbit"]')).toHaveCount(20);
+    await expect(page.getByLabel("Design & behavior preset")).toHaveValue("custom");
+
+    await page
+      .locator("summary")
+      .filter({ hasText: /^Motion$/ })
+      .click();
+    await expect(
+      page.getByRole("group", { name: "Curve" }).getByRole("button", { name: "Elastic" }),
+    ).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByRole("slider", { name: "Stiffness" })).toBeDisabled();
+  });
+
+  test("applies tab, label, border, noise, and grid density controls", async ({ page }) => {
+    await openPlayground(page);
+    const folders = page.locator(folderSelector);
+
+    await page
+      .getByRole("group", { name: "Tab alignment" })
+      .getByRole("button", { name: "Right" })
+      .click();
+    await expect(page.locator('[data-tab-alignment="right"]')).toHaveCount(20);
+
+    await setRange(page, "Tab width", 70);
+    await expect(folders.first()).toHaveCSS("--folder-tab-width", "70%");
+
+    await setRange(page, "Border size", 3);
+    await expect(folders.first()).toHaveCSS("--folder-border-width", "3px");
+    await setRange(page, "Label opacity", 0.4);
+    await setRange(page, "Backdrop blur", 16);
+    await expect(folders.first().locator(".folder-label")).toHaveCSS(
+      "background-color",
+      "rgba(10, 10, 10, 0.4)",
+    );
+    await expect(folders.first().locator(".folder-label")).toHaveCSS(
+      "backdrop-filter",
+      "blur(16px)",
+    );
+    await expect
+      .poll(() =>
+        folders
+          .first()
+          .locator(".folder-label")
+          .evaluate((label) => {
+            const front = label.parentElement;
+            if (!front) return false;
+            const labelRect = label.getBoundingClientRect();
+            const frontRect = front.getBoundingClientRect();
+            return (
+              labelRect.left > frontRect.left &&
+              labelRect.right < frontRect.right &&
+              labelRect.bottom < frontRect.bottom
+            );
+          }),
+      )
+      .toBe(true);
+
+    await page.getByRole("switch", { name: /Text container/i }).click();
+    await expect(page.locator(".folder-label")).toHaveCount(0);
+
+    await page.getByRole("switch", { name: /SVG noise/i }).click();
+    await expect(page.locator(".app-shell")).toHaveAttribute("data-texture-enabled", "true");
+    await setRange(page, "Noise intensity", 0.75);
+    await expect(page.locator(".app-shell")).toHaveCSS("--noise-opacity", "0.75");
+    await expect
+      .poll(() =>
+        page
+          .locator(".app-shell")
+          .evaluate((element) => getComputedStyle(element, "::before").opacity),
+      )
+      .toBe("0.75");
+
+    await setRange(page, "Grid density", 96);
+    await expect(page.locator("#folders-grid")).toHaveAttribute("data-grid-size", "96");
+  });
+
   test("covers code tab, theme switches, and reset", async ({ page }) => {
     await openPlayground(page);
     const app = page.locator(".app-shell");
@@ -169,20 +286,20 @@ test.describe("responsive layout", () => {
       await expect
         .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))
         .toBe(true);
+      await page.screenshot({ path: `test-results/visual-proof-responsive-${width}.png` });
       const columns = await columnCount(page);
       if (width === 320) expect(columns).toBe(1);
       else expect(columns).toBeGreaterThanOrEqual(2);
 
-      await expect(page.getByText("Cycles every 5 folders", { exact: true })).toBeVisible();
-      await expect
-        .poll(() =>
-          page
-            .locator(folderSelector)
-            .evaluateAll((folders) =>
-              folders.slice(0, 5).map((folder) => folder.getAttribute("data-deployment")),
-            ),
-        )
-        .toEqual(["fan", "skew3d", "cascade", "scatter", "horizontal_stack"]);
+      await expect(
+        page
+          .getByRole("group", { name: "Expansion layout" })
+          .getByRole("button", { name: "Random" }),
+      ).toHaveAttribute("aria-pressed", "true");
+      const assignments = await page
+        .locator(folderSelector)
+        .evaluateAll((folders) => folders.map((folder) => folder.getAttribute("data-deployment")));
+      expect(new Set(assignments).size).toBeGreaterThanOrEqual(5);
 
       await page
         .getByRole("group", { name: "Click" })
@@ -196,6 +313,20 @@ test.describe("responsive layout", () => {
         .toBe(true);
     });
   }
+
+  test("ultrawide viewport caps the dynamic grid at nine columns", async ({ page }) => {
+    await page.setViewportSize({ width: 2560, height: 1200 });
+    await openPlayground(page);
+    await expect.poll(() => columnCount(page)).toBe(9);
+    await page.screenshot({ path: "test-results/visual-proof-ultrawide-9-columns.png" });
+
+    await setRange(page, "Grid density", 200);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await expect.poll(() => columnCount(page)).toBeLessThan(9);
+    await expect
+      .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))
+      .toBe(true);
+  });
 });
 
 test("renders deterministic fallback when Pexels requests fail", async ({ page }) => {

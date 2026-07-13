@@ -46,6 +46,9 @@ describe("StyleFolder", () => {
       "gsap",
     );
     expect(screen.getByText(folder.title)).toHaveAttribute("title", folder.title);
+    expect(screen.getByText(folder.title).closest(".folder-label")?.parentElement).toHaveClass(
+      "folder-front",
+    );
   });
 
   it("renders one card image per visible file", () => {
@@ -94,6 +97,27 @@ describe("StyleFolder", () => {
     expect(screen.queryByText("PINNED")).not.toBeInTheDocument();
   });
 
+  it("raises only the active folder above adjacent folders", () => {
+    render(
+      <>
+        <StyleFolder folder={STYLES_DATA[0]} {...baseProps} />
+        <StyleFolder folder={STYLES_DATA[1]} {...baseProps} />
+      </>,
+    );
+    const active = screen.getByRole("button", { name: new RegExp(STYLES_DATA[0].title, "i") });
+    const adjacent = screen.getByRole("button", {
+      name: new RegExp(STYLES_DATA[1].title, "i"),
+    });
+
+    expect(active).toHaveStyle({ zIndex: "1" });
+    expect(adjacent).toHaveStyle({ zIndex: "1" });
+    fireEvent.pointerEnter(active);
+    expect(active).toHaveStyle({ zIndex: "50" });
+    expect(adjacent).toHaveStyle({ zIndex: "1" });
+    fireEvent.pointerLeave(active);
+    expect(active).toHaveStyle({ zIndex: "1" });
+  });
+
   it("renders a deterministic image-free neutral tone variant", () => {
     const folder = STYLES_DATA[0];
     const { container } = render(
@@ -117,6 +141,40 @@ describe("StyleFolder", () => {
       "true",
     );
     expect(screen.getAllByRole("img")).toHaveLength(4);
+  });
+
+  it("applies tab geometry, border geometry, and optional label settings", () => {
+    const folder = STYLES_DATA[0];
+    const { container } = render(
+      <StyleFolder
+        folder={folder}
+        {...baseProps}
+        compact
+        gridItemSize={156}
+        tabAlignment="right"
+        tabWidth={68}
+        tabHeight={18}
+        labelVisible={false}
+        labelOpacity={0.4}
+        labelBackdropBlur={16}
+        folderBorderWidth={2.5}
+        folderBorderOpacity={0.45}
+        folderRadius={20}
+      />,
+    );
+    const button = screen.getByRole("button", { name: new RegExp(folder.title, "i") });
+
+    expect(button).toHaveAttribute("data-tab-alignment", "right");
+    expect(button).toHaveAttribute("data-label-visible", "false");
+    expect(button).toHaveStyle({
+      "--folder-size": "156px",
+      "--folder-tab-width": "68%",
+      "--folder-tab-height": "18px",
+      "--folder-border-width": "2.5px",
+      "--folder-border-opacity": "45%",
+      "--folder-radius": "20px",
+    });
+    expect(container.querySelector(".folder-label")).not.toBeInTheDocument();
   });
 
   it("replaces every failed remote image with an inspectable neutral fallback", () => {

@@ -1,4 +1,3 @@
-import { FOLDER_DEPLOYMENTS } from "../types";
 import type { AnimationEngine, PlaygroundConfig } from "../types";
 
 export type SpringCapability = "native" | "approximation";
@@ -77,11 +76,18 @@ export function buildPlaygroundSnippet(config: PlaygroundConfig): string {
   const engine = ENGINE_CATALOG[config.animationEngine];
 
   return `// Illustrative ${engine.label} setup. Supply these project imports in your app.
+import type { CSSProperties } from "react";
 import StyleFolder from "./components/StyleFolder";
 import { STYLES_DATA } from "./data/stylesData";
+import { deploymentForKey } from "./types";
 
 const animationEngine = ${quote(config.animationEngine)} as const;
-const stackDeployments = [${FOLDER_DEPLOYMENTS.map(quote).join(", ")}] as const;
+const deploymentMode = ${quote(config.deploymentMode)} as const;
+const playgroundStyle = {
+  "--noise-opacity": ${config.noiseOpacity},
+  "--noise-scale": "${config.noiseScale}px",
+  "--grid-item-min": "${config.gridItemSize}px",
+} as CSSProperties;
 const sharedConfig = {
   orientation: ${quote(config.orientation)} as const,
   springSettings: {
@@ -99,20 +105,42 @@ const sharedConfig = {
   transitionCurve: ${quote(config.transitionCurve)} as const,
   folderShape: ${quote(config.folderShape)} as const,
   cardStyle: ${quote(config.cardStyle)} as const,
+  gridItemSize: ${config.gridItemSize},
   compact: true,
   textureEnabled: ${config.textureEnabled},
   tabFill: ${quote(config.tabFill)} as const,
   tabColor: ${quote(config.tabColor)},
+  tabWidth: ${config.tabWidth},
+  tabHeight: ${config.tabHeight},
+  tabAlignment: ${quote(config.tabAlignment)} as const,
+  labelVisible: ${config.labelVisible},
+  labelOpacity: ${config.labelOpacity},
+  labelBackdropBlur: ${config.labelBackdropBlur},
+  folderBorderWidth: ${config.folderBorderWidth},
+  folderBorderOpacity: ${config.folderBorderOpacity},
+  folderRadius: ${config.folderRadius},
+  paletteId: ${quote(config.paletteId)} as const,
   visualSource: ${quote(config.visualSource)} as const,
 };
 
-STYLES_DATA.map((folder, index) => (
-  <StyleFolder
-    key={folder.id}
-    folder={folder}
-    animationEngine={animationEngine}
-    deploymentStyle={stackDeployments[index % stackDeployments.length]}
-    {...sharedConfig}
-  />
-));`;
+<div
+  data-theme=${quote(config.theme)}
+  data-texture-enabled={${config.textureEnabled}}
+  className="${config.theme === "light" ? "theme-light" : "theme-dark"} app-shell"
+  style={playgroundStyle}
+>
+  <div className="folders-grid">
+    {STYLES_DATA.map((folder) => (
+      <StyleFolder
+        key={folder.id}
+        folder={folder}
+        animationEngine={animationEngine}
+        deploymentStyle={
+          deploymentMode === "random" ? deploymentForKey(folder.id) : deploymentMode
+        }
+        {...sharedConfig}
+      />
+    ))}
+  </div>
+</div>;`;
 }

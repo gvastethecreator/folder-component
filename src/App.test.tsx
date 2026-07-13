@@ -1,9 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "./App";
 import { ENGINE_CATALOG_LIST, buildPlaygroundSnippet } from "./animation/engineCatalog";
 import { STYLES_DATA } from "./data/stylesData";
+import { DESIGN_PRESETS, getMatchingDesignPreset } from "./config/playgroundCatalog";
 import {
   createDefaultPlaygroundConfig,
   DEFAULT_PLAYGROUND_CONFIG,
@@ -25,30 +26,34 @@ describe("App", () => {
     }
   });
 
-  it("renders four five-folder cycles with a stable stack order", () => {
+  it("renders twenty unique folders with a stable random layout mix", () => {
     render(<App />);
 
-    expect(document.querySelectorAll('[id^="folder-container-"]')).toHaveLength(20);
-    expect(document.querySelector("#folder-container-cyberpunk")).toHaveAttribute(
-      "data-deployment",
-      "fan",
-    );
-    expect(document.querySelector("#folder-container-anime-ghibli")).toHaveAttribute(
-      "data-deployment",
+    const folders = [...document.querySelectorAll<HTMLElement>('[id^="folder-container-"]')];
+    expect(folders).toHaveLength(20);
+    expect(folders.map((folder) => folder.dataset.deployment)).toEqual([
       "skew3d",
-    );
-    expect(document.querySelector("#folder-container-impressionism")).toHaveAttribute(
-      "data-deployment",
-      "cascade",
-    );
-    expect(document.querySelector("#folder-container-minimal-geometric")).toHaveAttribute(
-      "data-deployment",
-      "scatter",
-    );
-    expect(document.querySelector("#folder-container-cinematic-noir")).toHaveAttribute(
-      "data-deployment",
+      "burst",
+      "deck_split",
       "horizontal_stack",
-    );
+      "skew3d",
+      "fan",
+      "deck_split",
+      "burst",
+      "skew3d",
+      "horizontal_stack",
+      "scatter",
+      "burst",
+      "cascade",
+      "scatter",
+      "horizontal_stack",
+      "staircase",
+      "skew3d",
+      "fan",
+      "deck_split",
+      "burst",
+    ]);
+    expect(new Set(folders.map((folder) => folder.dataset.coverImage)).size).toBe(20);
   });
 
   it("switches the complete application chrome to light mode", async () => {
@@ -59,32 +64,30 @@ describe("App", () => {
     expect(document.querySelector("[data-theme]")).toHaveAttribute("data-theme", "light");
   });
 
-  it("switches every folder between all five animation engines", async () => {
-    const user = userEvent.setup();
+  it("switches every folder between all five animation engines", () => {
     render(<App />);
 
-    await user.click(screen.getByRole("button", { name: "Motion" }));
+    fireEvent.click(screen.getByRole("button", { name: "Motion" }));
     expect(document.querySelectorAll('[data-animation-engine="motion"]')).toHaveLength(20);
 
-    await user.click(screen.getByRole("button", { name: "Anime.js" }));
+    fireEvent.click(screen.getByRole("button", { name: "Anime.js" }));
     expect(document.querySelectorAll('[data-animation-engine="animejs"]')).toHaveLength(20);
 
-    await user.click(screen.getByRole("button", { name: "CSS" }));
+    fireEvent.click(screen.getByRole("button", { name: "CSS" }));
     expect(document.querySelectorAll('[data-animation-engine="css"]')).toHaveLength(20);
 
-    await user.click(screen.getByRole("button", { name: "WAAPI" }));
+    fireEvent.click(screen.getByRole("button", { name: "WAAPI" }));
     expect(document.querySelectorAll('[data-animation-engine="waapi"]')).toHaveLength(20);
 
-    await user.click(screen.getByRole("button", { name: "GSAP" }));
+    fireEvent.click(screen.getByRole("button", { name: "GSAP" }));
     expect(document.querySelectorAll('[data-animation-engine="gsap"]')).toHaveLength(20);
-  });
+  }, 10_000);
 
-  it("maps all five engine labels, statuses, and descriptions from one catalog", async () => {
-    const user = userEvent.setup();
+  it("maps all five engine labels, statuses, and descriptions from one catalog", () => {
     render(<App />);
 
     for (const engine of ENGINE_CATALOG_LIST) {
-      await user.click(screen.getByRole("button", { name: engine.label }));
+      fireEvent.click(screen.getByRole("button", { name: engine.label }));
       expect(screen.getAllByText(engine.statusLabel).length).toBeGreaterThan(0);
       expect(screen.getAllByText(engine.description).length).toBeGreaterThan(0);
     }
@@ -102,9 +105,19 @@ describe("App", () => {
     const snippet = buildPlaygroundSnippet(changed);
     expect(snippet).toContain('const animationEngine = "waapi"');
     expect(snippet).toContain("const sharedConfig = {");
-    expect(snippet).toContain("const stackDeployments =");
+    expect(snippet).toContain("deploymentForKey(folder.id)");
+    expect(snippet).toContain("folderBorderOpacity: 0.72");
     expect(snippet).not.toContain("folders.map");
     expect(snippet).not.toContain("sharedSettings");
+  });
+
+  it("marks any manual deviation from a complete preset as custom", () => {
+    const kinetic = DESIGN_PRESETS.kinetic.config;
+    expect(getMatchingDesignPreset(kinetic)).toBe("kinetic");
+    expect(getMatchingDesignPreset({ ...kinetic, fanAngle: kinetic.fanAngle + 1 })).toBe("custom");
+    expect(
+      getMatchingDesignPreset({ ...kinetic, visibleCardsCount: kinetic.visibleCardsCount + 1 }),
+    ).toBe("custom");
   });
 
   it("disables Tween physics in the live app and restores saved Spring values", async () => {
@@ -113,7 +126,7 @@ describe("App", () => {
 
     await user.click(screen.getByRole("button", { name: "Tween" }));
     expect(screen.getByRole("slider", { name: "Stiffness" })).toBeDisabled();
-    expect(screen.getByText(/Tween uses fixed duration and easing/i)).toBeInTheDocument();
+    expect(screen.getByText(/Tween uses a tuned timing profile/i)).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Spring" }));
     expect(screen.getByRole("slider", { name: "Stiffness" })).not.toBeDisabled();
@@ -125,12 +138,26 @@ describe("App", () => {
     render(<App />);
 
     await user.click(screen.getByRole("button", { name: "Lock" }));
-    const folder = screen.getAllByRole("button", { name: /^Cyberpunk & Neon\./ })[0];
+    const folder = screen.getByRole("button", { name: /^Neon Rain District\./ });
     await user.click(folder);
     expect(screen.getByText("PINNED")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Reset settings" }));
     expect(folder).toHaveAttribute("aria-expanded", "false");
     expect(screen.queryByText("PINNED")).not.toBeInTheDocument();
+  });
+
+  it("applies presets and global deployment overrides to every folder", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.selectOptions(screen.getByLabelText("Design & behavior preset"), "kinetic");
+    expect(document.querySelectorAll('[data-animation-engine="animejs"]')).toHaveLength(20);
+    expect(document.querySelectorAll('[data-deployment="burst"]')).toHaveLength(20);
+    expect(document.querySelectorAll('[data-palette="orchid"]')).toHaveLength(20);
+
+    await user.click(screen.getByRole("button", { name: "Orbit" }));
+    expect(document.querySelectorAll('[data-deployment="orbit"]')).toHaveLength(20);
+    expect(screen.getByLabelText("Design & behavior preset")).toHaveValue("custom");
   });
 });

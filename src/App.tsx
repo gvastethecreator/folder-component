@@ -1,28 +1,22 @@
 import { useReducer } from "react";
+import type { CSSProperties } from "react";
 import { STYLES_DATA } from "./data/stylesData";
 import { ENGINE_CATALOG } from "./animation/engineCatalog";
 import StyleFolder from "./components/StyleFolder";
 import PlaygroundControls from "./components/PlaygroundControls";
 import {
+  DESIGN_PRESETS,
+  getMatchingDesignPreset,
+  type DesignPresetId,
+} from "./config/playgroundCatalog";
+import {
   createDefaultPlaygroundConfig,
-  FOLDER_DEPLOYMENTS,
+  deploymentForKey,
   playgroundConfigReducer,
   type PlaygroundConfig,
   type PlaygroundConfigAction,
   type PlaygroundConfigValue,
 } from "./types";
-
-const GRID_FOLDERS = Array.from({ length: 4 }, (_, rowIndex) =>
-  STYLES_DATA.map((folder) =>
-    rowIndex === 0
-      ? folder
-      : {
-          ...folder,
-          id: `${folder.id}-set-${rowIndex + 1}`,
-          title: `${folder.title} · Set ${String(rowIndex + 1).padStart(2, "0")}`,
-        },
-  ),
-).flat();
 
 export default function App() {
   const [config, dispatch] = useReducer(
@@ -37,8 +31,12 @@ export default function App() {
     dispatch({ type: "set", key, value } as PlaygroundConfigAction);
   };
   const handleReset = () => dispatch({ type: "reset" });
+  const handleApplyPreset = (presetId: DesignPresetId) => {
+    dispatch({ type: "apply", value: DESIGN_PRESETS[presetId].config });
+  };
   const {
     animationEngine,
+    deploymentMode,
     orientation,
     springSettings,
     spacingMultiplier,
@@ -51,18 +49,38 @@ export default function App() {
     transitionCurve,
     folderShape,
     cardStyle,
+    gridItemSize,
     theme,
     textureEnabled,
+    noiseOpacity,
+    noiseScale,
     tabFill,
     tabColor,
+    tabWidth,
+    tabHeight,
+    tabAlignment,
+    labelVisible,
+    labelOpacity,
+    labelBackdropBlur,
+    folderBorderWidth,
+    folderBorderOpacity,
+    folderRadius,
+    paletteId,
     visualSource,
   } = config;
   const engine = ENGINE_CATALOG[animationEngine];
+  const activePresetId = getMatchingDesignPreset(config);
 
   return (
     <div
       data-theme={theme}
       data-texture-enabled={textureEnabled}
+      style={
+        {
+          "--noise-opacity": noiseOpacity,
+          "--noise-scale": `${noiseScale}px`,
+        } as CSSProperties
+      }
       className={`${theme === "light" ? "theme-light" : "theme-dark"} app-shell min-h-screen lg:h-screen overflow-x-clip lg:overflow-hidden bg-neutral-950 text-neutral-100 flex flex-col selection:bg-neutral-200 selection:text-neutral-950`}
     >
       {/* MAIN CONTAINER */}
@@ -79,7 +97,7 @@ export default function App() {
               </p>
             </div>
             <div className="flex items-center gap-2 font-mono text-[9px] tabular-nums text-neutral-500">
-              <span>20 ITEMS</span>
+              <span>{STYLES_DATA.length} ITEMS</span>
               <span aria-hidden="true">/</span>
               <span>{engine.statusLabel}</span>
             </div>
@@ -87,9 +105,15 @@ export default function App() {
           {/* FOLDERS GRID CONTAINER */}
           <div
             id="folders-grid"
-            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-x-4 gap-y-14 justify-items-center py-16 xl:pt-28 xl:pb-16 px-2 sm:px-4"
+            data-grid-size={gridItemSize}
+            className="folders-grid justify-items-center py-16 xl:pt-28 xl:pb-16 px-2 sm:px-4"
+            style={
+              {
+                "--grid-item-min": `${gridItemSize}px`,
+              } as CSSProperties
+            }
           >
-            {GRID_FOLDERS.map((folder, index) => (
+            {STYLES_DATA.map((folder, index) => (
               <StyleFolder
                 key={folder.id}
                 folder={folder}
@@ -100,17 +124,30 @@ export default function App() {
                 fanDirection={fanDirection}
                 fanAngle={fanAngle}
                 coverTilt={coverTilt}
-                deploymentStyle={FOLDER_DEPLOYMENTS[index % FOLDER_DEPLOYMENTS.length]}
+                deploymentStyle={
+                  deploymentMode === "random" ? deploymentForKey(folder.id) : deploymentMode
+                }
                 staggerDelay={staggerDelay}
                 clickBehavior={clickBehavior}
                 transitionCurve={transitionCurve}
                 folderShape={folderShape}
                 cardStyle={cardStyle}
+                gridItemSize={gridItemSize}
                 priority={index < 2}
                 compact
                 textureEnabled={textureEnabled}
                 tabFill={tabFill}
                 tabColor={tabColor}
+                tabWidth={tabWidth}
+                tabHeight={tabHeight}
+                tabAlignment={tabAlignment}
+                labelVisible={labelVisible}
+                labelOpacity={labelOpacity}
+                labelBackdropBlur={labelBackdropBlur}
+                folderBorderWidth={folderBorderWidth}
+                folderBorderOpacity={folderBorderOpacity}
+                folderRadius={folderRadius}
+                paletteId={paletteId}
                 visualSource={visualSource}
                 animationEngine={animationEngine}
               />
@@ -123,6 +160,9 @@ export default function App() {
           <PlaygroundControls
             animationEngine={animationEngine}
             setAnimationEngine={(value) => setConfigValue("animationEngine", value)}
+            activePresetId={activePresetId}
+            deploymentMode={deploymentMode}
+            setDeploymentMode={(value) => setConfigValue("deploymentMode", value)}
             orientation={orientation}
             setOrientation={(value) => setConfigValue("orientation", value)}
             springSettings={springSettings}
@@ -147,17 +187,44 @@ export default function App() {
             setFolderShape={(value) => setConfigValue("folderShape", value)}
             cardStyle={cardStyle}
             setCardStyle={(value) => setConfigValue("cardStyle", value)}
+            gridItemSize={gridItemSize}
+            setGridItemSize={(value) => setConfigValue("gridItemSize", value)}
             theme={theme}
             setTheme={(value) => setConfigValue("theme", value)}
             textureEnabled={textureEnabled}
             setTextureEnabled={(value) => setConfigValue("textureEnabled", value)}
+            noiseOpacity={noiseOpacity}
+            setNoiseOpacity={(value) => setConfigValue("noiseOpacity", value)}
+            noiseScale={noiseScale}
+            setNoiseScale={(value) => setConfigValue("noiseScale", value)}
             tabFill={tabFill}
             setTabFill={(value) => setConfigValue("tabFill", value)}
             tabColor={tabColor}
             setTabColor={(value) => setConfigValue("tabColor", value)}
+            tabWidth={tabWidth}
+            setTabWidth={(value) => setConfigValue("tabWidth", value)}
+            tabHeight={tabHeight}
+            setTabHeight={(value) => setConfigValue("tabHeight", value)}
+            tabAlignment={tabAlignment}
+            setTabAlignment={(value) => setConfigValue("tabAlignment", value)}
+            labelVisible={labelVisible}
+            setLabelVisible={(value) => setConfigValue("labelVisible", value)}
+            labelOpacity={labelOpacity}
+            setLabelOpacity={(value) => setConfigValue("labelOpacity", value)}
+            labelBackdropBlur={labelBackdropBlur}
+            setLabelBackdropBlur={(value) => setConfigValue("labelBackdropBlur", value)}
+            folderBorderWidth={folderBorderWidth}
+            setFolderBorderWidth={(value) => setConfigValue("folderBorderWidth", value)}
+            folderBorderOpacity={folderBorderOpacity}
+            setFolderBorderOpacity={(value) => setConfigValue("folderBorderOpacity", value)}
+            folderRadius={folderRadius}
+            setFolderRadius={(value) => setConfigValue("folderRadius", value)}
+            paletteId={paletteId}
+            setPaletteId={(value) => setConfigValue("paletteId", value)}
             visualSource={visualSource}
             setVisualSource={(value) => setConfigValue("visualSource", value)}
             onReset={handleReset}
+            onApplyPreset={handleApplyPreset}
           />
         </aside>
       </main>

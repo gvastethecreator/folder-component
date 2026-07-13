@@ -3,7 +3,7 @@ import { animate as motionAnimate } from "motion";
 import type { AnimationPlaybackControls } from "motion";
 import { animate as animeAnimate, spring as animeSpring } from "animejs";
 import type { JSAnimation } from "animejs";
-import type { AnimationEngine, SpringSettings } from "../types";
+import type { AnimationEngine, SpringSettings, TransitionCurve } from "../types";
 
 export interface CardTransform {
   x: number;
@@ -30,7 +30,7 @@ export interface FolderEngineOptions {
   frontOpen: Pick<CardTransform, "y" | "scale">;
   initialOpen: boolean;
   reducedMotion: boolean;
-  transitionCurve: "spring" | "tween";
+  transitionCurve: TransitionCurve;
   springSettings: SpringSettings;
   duration: number;
   staggerDelay: number;
@@ -119,6 +119,8 @@ function stabilizeFeedbackSeam(
 
 function nativeEase(options: FolderEngineOptions) {
   if (options.transitionCurve === "tween") return "cubic-bezier(0.16, 1, 0.3, 1)";
+  if (options.transitionCurve === "bounce") return "cubic-bezier(0.34, 1.56, 0.64, 1)";
+  if (options.transitionCurve === "elastic") return "cubic-bezier(0.18, 1.8, 0.35, 1)";
   const overshoot = Math.min(0.42, Math.max(0.08, 0.48 - options.springSettings.damping / 70));
   return `cubic-bezier(0.2, ${1 + overshoot}, 0.3, 1)`;
 }
@@ -367,7 +369,14 @@ function createGsapController(options: FolderEngineOptions): FolderEngineControl
 
     const transforms = open ? options.expanded : options.collapsed;
     const overshoot = gsap.utils.clamp(0.15, 1.15, 1.35 - options.springSettings.damping / 18);
-    const ease = options.transitionCurve === "spring" ? `back.out(${overshoot})` : "power4.out";
+    const ease =
+      options.transitionCurve === "spring"
+        ? `back.out(${overshoot})`
+        : options.transitionCurve === "bounce"
+          ? "bounce.out"
+          : options.transitionCurve === "elastic"
+            ? "elastic.out(1, 0.35)"
+            : "power4.out";
     setLayers(targets, true);
 
     activeTimeline = gsap.timeline({
@@ -440,18 +449,24 @@ function createMotionController(options: FolderEngineOptions): FolderEngineContr
 
     const transforms = open ? options.expanded : options.collapsed;
     setLayers(targets, true);
+    const springProfile =
+      options.transitionCurve === "bounce"
+        ? { stiffness: 260, damping: 9, mass: 0.8 }
+        : options.transitionCurve === "elastic"
+          ? { stiffness: 180, damping: 7, mass: 0.9 }
+          : options.springSettings;
     const transition =
-      options.transitionCurve === "spring"
+      options.transitionCurve === "tween"
         ? {
-            type: "spring" as const,
-            stiffness: options.springSettings.stiffness,
-            damping: options.springSettings.damping,
-            mass: options.springSettings.mass,
-          }
-        : {
             type: "tween" as const,
             duration: options.duration,
             ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
+          }
+        : {
+            type: "spring" as const,
+            stiffness: springProfile.stiffness,
+            damping: springProfile.damping,
+            mass: springProfile.mass,
           };
 
     activeAnimations = options.cards.map((card, index) =>
@@ -538,14 +553,20 @@ function createAnimeController(options: FolderEngineOptions): FolderEngineContro
     }
 
     const transforms = open ? options.expanded : options.collapsed;
+    const springProfile =
+      options.transitionCurve === "bounce"
+        ? { stiffness: 260, damping: 9, mass: 0.8 }
+        : options.transitionCurve === "elastic"
+          ? { stiffness: 180, damping: 7, mass: 0.9 }
+          : options.springSettings;
     const ease =
-      options.transitionCurve === "spring"
-        ? animeSpring({
-            stiffness: options.springSettings.stiffness,
-            damping: options.springSettings.damping,
-            mass: options.springSettings.mass,
-          })
-        : "out(4)";
+      options.transitionCurve === "tween"
+        ? "out(4)"
+        : animeSpring({
+            stiffness: springProfile.stiffness,
+            damping: springProfile.damping,
+            mass: springProfile.mass,
+          });
     let pending = options.cards.length + 1;
     const completeOne = () => {
       pending -= 1;
