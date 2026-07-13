@@ -16,24 +16,44 @@
 - **Recommended next step:** If/when `@voidzero-dev/vite-plus` ships on npm, swap the
   scripts to the `vp` equivalents and adopt `vp check` as the single aggregate gate.
 
-### TD-3 — `lucide-react` bumped 0.x → 1.x
+## Accepted tradeoffs
+
+### TD-7 — Eager loading of all five engine adapters
 
 - **Severity:** low.
-- **Impact:** Major version bump on the icon library. All imported icons (`Settings2`,
-  `Copy`, `Check`, `Layout`, `RefreshCw`, `Code`, `Info`, `Sparkles`) still resolve and the
-  build/typecheck pass, but a full visual diff of icon glyphs was not performed.
-- **Recommended next step:** Eyeball the icons in the controls panel after `bun run dev`; if
-  any glyph regressed, pin `lucide-react` back to `^0.546.0`.
+- **Impact:** GSAP, Motion, Anime.js, CSS, and WAAPI are bundled together. This keeps the
+  comparison playground instant when switching engines and avoids a lazy-boundary interaction
+  regression, at the cost of a larger initial JavaScript payload.
+- **Decision:** Keep eager loading until a measured split lowers the production bundle while
+  preserving the full Playwright interaction gate. Do not split speculatively.
+
+### TD-8 — Chromium-only automated browser baseline
+
+- **Severity:** low.
+- **Impact:** Playwright 1.61.1 Chromium is the required CI gate. Firefox, Safari, and manual
+  screen-reader checks are conditional because those runtimes are not installed in CI.
+- **Decision:** Keep Chromium as release-candidate baseline; schedule cross-browser/manual
+  coverage when those runtimes become available.
 
 ## Resolved
 
-### TD-2 — `motion`-based components are not unit-tested (resolved)
+### TD-3 — `lucide-react` bumped 0.x → 1.x (resolved)
 
-- **Resolution:** Added `src/components/StyleFolder.test.tsx` (3 tests: cover image + title,
-  one card image per visible file, hidden files not rendered) and `src/App.test.tsx` (2
-  tests: mount + controls panel, all 5 folder titles render). Motion 12 renders cleanly under
+- **Resolution:** Verified `Check`, `ChevronDown`, `Code2`, `Copy`, `RefreshCw`, and
+  `SlidersHorizontal` in rendered Chromium dark/light and code/copy states. The glyphs render
+  cleanly with no clipping or layout regression, so `lucide-react` remains at `1.24.0`.
+
+### TD-2 — Animated folder components are not unit-tested (resolved)
+
+- **Resolution:** Added `src/components/StyleFolder.test.tsx` (13 tests: cover image + title,
+  visible-file limits, five per-engine markers, interaction state, image-free tones, CSS
+  transition/keyframe behavior, and the native `Element.animate()` WAAPI path) and
+  `src/App.test.tsx` (9 tests: mount + controls panel, 20-item grid assignment, titles,
+  theme, multi-engine switching, and reset state). The animation layer renders cleanly under
   jsdom using the `ResizeObserver`/`IntersectionObserver`/`matchMedia`/`clipboard` stubs
-  already in `src/test/setup.ts`. Suite is now 15/15 across 4 files.
+  already in `src/test/setup.ts`. Suite is now 39/39 across 4 files. Playwright adds the
+  Chromium browser gate for engine labels/markers, pointer/touch interaction, controls,
+  themes, reduced motion, 320/390 layouts, and Pexels failure recovery.
 
 ### TD-4 — Google Fonts loaded via render-blocking CSS `@import` (resolved)
 

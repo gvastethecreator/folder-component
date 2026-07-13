@@ -11,8 +11,24 @@ panel exposes a live "playground" of animation controls (deployment style, sprin
 physics, stagger, shape, etc.) and a copy-paste reusable code snippet.
 
 The app is **purely a static frontend**. Despite the original `package.json` listing a
-GenAI/Express server stack, **none of it is imported or used**. All data is hardcoded
-Unsplash imagery in `src/data/stylesData.ts`.
+GenAI/Express server stack, **none of it is imported or used**. The catalog uses a curated
+set of optimized Pexels images in `src/data/stylesData.ts`.
+
+## Current release-candidate contract
+
+- **Engines:** GSAP, Motion, Anime.js, CSS, and WAAPI share one folder contract and are
+  selectable at runtime. CSS/WAAPI expose spring values as documented easing/duration
+  approximations because those APIs do not provide a physical spring primitive.
+- **Recovery:** Pexels image failures resolve to deterministic neutral-tone fallbacks; the
+  UI does not leave broken-image chrome.
+- **Browser baseline:** Playwright 1.61.1 + Chromium is the required automated gate. The
+  app targets evergreen browsers with Pointer Events, ResizeObserver, and WAAPI support;
+  Firefox/Safari and manual screen-reader coverage are conditional, not CI requirements.
+- **Loading tradeoff:** all five adapters load eagerly so engine comparison and switching
+  stay immediate. Code splitting is deferred until a measured bundle reduction preserves
+  interaction and browser-gate results.
+- **Toolchain:** Bun 1.3.14 is pinned in `package.json` and CI; installs use the committed
+  `bun.lock`.
 
 ## Baseline (before this pass)
 
@@ -41,8 +57,8 @@ Unsplash imagery in `src/data/stylesData.ts`.
 **Lane B — In-place modernization** (user-confirmed: "Full modernization").
 
 Target profile (per the `web-project-readiness` skill): Bun, Vite 8, OXC (oxlint + oxfmt),
-Vitest, React 19, Tailwind v4. `motion` is kept (existing, idiomatic; the skill says avoid
-Framer/Motion only for _new_ work, not rip out working existing usage).
+Vitest, React 19, and Tailwind v4. Motion was retained during the original readiness pass;
+follow-up #3 replaced that hot path with GSAP and removed Motion from the dependency graph.
 
 ## Notable deviation from the skill profile
 
@@ -138,10 +154,51 @@ the remaining AI Studio remnants — deleted `metadata.json` and `assets/.aistud
 the `DISABLE_HMR` toggle from `vite.config.ts` and the matching paragraph from `README.md`.
 TD-6 moved to Rejected.
 
-**Follow-up #3** (standalone project): confirmed the project remains a standalone React SPA
+**Follow-up #3** (rendering + motion system): migrated the interactive folder hot path from
+Motion to GSAP 3.15.0 + `@gsap/react` 2.1.2, with scoped cleanup, interruptible transform-only
+animation, reduced-motion handling, deferred offscreen card rendering, reusable paused
+timelines, and a neutral Geist-inspired grayscale UI. Motion was removed after the last import
+was retired. Verification: typecheck and lint pass; 23/23 tests pass; the production build is
+301.15 kB JS (101.71 kB gzip) + 29.64 kB CSS (6.65 kB gzip). Chromium checks cover the five
+stack geometries, dark/light modes, image-free tones, optional noise, mobile overflow, and
+reduced motion. The prior Motion notes above remain as historical baseline.
+
+**Follow-up #4** (standalone project): confirmed the project remains a standalone React SPA
 (no Custom Element packaging). `git init` ran (repo at `D:/DEV/folders`, default branch
 `master`); `node_modules` ignored via `.gitignore`, `bun.lock` trackable. No initial commit
 made (commit when ready). `README.md` / `AGENTS.md` reworded to "standalone static … SPA".
+
+**Follow-up #5** (multi-engine animation playground): restored Motion and added Anime.js 4,
+pure CSS transitions/keyframes, and native WAAPI alongside the existing GSAP integration.
+`src/animation/folderEngines.ts` now owns five interruptible adapters behind one
+folder-animation contract; the playground exposes a live GSAP / Motion / Anime.js / CSS /
+WAAPI selector and keeps deployment geometry, spring/tween controls, stagger, reduced-motion
+behavior, click feedback, and cleanup consistent across engines. CSS and WAAPI translate the
+spring controls into duration plus an overshooting cubic-bezier because neither platform API
+includes a physical spring primitive. Verification: format, lint, typecheck, 32/32 tests,
+production build, and HTTP 200 from the Vite development server are green. The release gate
+now uses a pinned Playwright Chromium project for engine markers, interaction, controls,
+responsive viewports, reduced motion, and Pexels failure recovery.
+
+**Follow-up #6** (toolchain + browser gate): pinned Bun 1.3.14 in package metadata and CI,
+added exact Playwright 1.61.1 Chromium coverage, and refreshed safe patch/minor tooling
+updates only (`lucide-react`, `@types/node`, `@vitest/coverage-istanbul`, `oxlint`, Vite,
+Vitest). Major TypeScript, Node, and React migrations remain deferred. Eager loading of all
+five adapters is recorded as an intentional comparison-playground tradeoff.
+
+### Slice 03 verification snapshot (2026-07-13, Windows)
+
+| Command                         | Result                                                                                        |
+| ------------------------------- | --------------------------------------------------------------------------------------------- |
+| `bun --version`                 | `1.3.14`                                                                                      |
+| `bun install --frozen-lockfile` | pass; lockfile unchanged                                                                      |
+| `bun audit`                     | pass; no vulnerabilities                                                                      |
+| `bun run typecheck`             | pass                                                                                          |
+| `bun run lint`                  | pass                                                                                          |
+| `bun run test`                  | pass; 39/39 tests across 4 unit files (script targets `src/`)                                 |
+| `bun run build`                 | pass; 407.92 kB JS / 139.01 kB gzip, 31.34 kB CSS / 7.10 kB gzip                              |
+| `bun run test:e2e`              | pass; 9/9 Chromium tests, including interrupted Pulse/Flash cleanup across controller changes |
+| `bun run format:check`          | pass; all matched files use the correct format                                                |
 
 ## Recommended next slices
 
@@ -154,6 +211,4 @@ TD-5 (`setup-project` run → `AGENTS.md` + `docs/agents/`).
 
 Still open:
 
-1. **TD-3** — eyeball the `lucide-react` 1.x icon glyphs in `bun run dev`; pin back to
-   `^0.546.0` if any regressed.
-2. **TD-1** — adopt the `vp` CLI if/when `@voidzero-dev/vite-plus` ships on npm.
+1. **TD-1** — adopt the `vp` CLI if/when `@voidzero-dev/vite-plus` ships on npm.

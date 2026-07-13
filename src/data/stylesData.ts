@@ -1,21 +1,20 @@
 import { FolderData } from "../types";
 
+const pexels = (photoId: number) =>
+  `https://images.pexels.com/photos/${photoId}/pexels-photo-${photoId}.jpeg?auto=compress&cs=tinysrgb&w=800&h=1000&fit=crop`;
+
 export const STYLES_DATA: FolderData[] = [
   {
     id: "cyberpunk",
     title: "Cyberpunk & Neon",
     description:
       "High-contrast neon color schemes, futuristic tech elements, wet streets with glowing reflections, and deep digital shadows.",
-    coverImage:
-      "https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=800&auto=format&fit=crop&q=80",
-    themeColor: "from-fuchsia-500 to-cyan-500",
-    badgeColor: "bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/20",
+    coverImage: pexels(28122495),
     files: [
       {
         id: "cyber-alley",
         name: "Neon Alley Rain",
-        image:
-          "https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&auto=format&fit=crop&q=80",
+        image: pexels(28122495),
         prompt:
           "A narrow cyberpunk alleyway at night, heavy rain, glowing neon signs in magenta, cyan, and yellow, puddles on the asphalt reflecting the vibrant lights, detailed cyberpunk vending machines, octane render, photorealistic, 8k.",
         description:
@@ -31,8 +30,7 @@ export const STYLES_DATA: FolderData[] = [
       {
         id: "synthwave-grid",
         name: "Retro Synthwave Sun",
-        image:
-          "https://images.unsplash.com/photo-1511447333015-45b65e60f6d5?w=800&auto=format&fit=crop&q=80",
+        image: pexels(19286060),
         prompt:
           "Retro 80s synthwave landscape, wireframe glowing grid stretching to the horizon, giant neon wireframe sun setting in the center, violet and pink gradients, laser lines, futuristic super-car, Outrun aesthetic, vector-detailed.",
         description:
@@ -48,8 +46,7 @@ export const STYLES_DATA: FolderData[] = [
       {
         id: "cyber-beams",
         name: "Cybernetic Glow Portrait",
-        image:
-          "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&auto=format&fit=crop&q=80",
+        image: pexels(11163981),
         prompt:
           "Cinematic portrait of a cyborg with intricate bioluminescent skin patterns, cybernetic optical implants glowing soft amber, standing in a dark misty server room with green status LEDs, dramatic rim lighting, unreal engine 5, depth of field.",
         description:
@@ -65,8 +62,7 @@ export const STYLES_DATA: FolderData[] = [
       {
         id: "cyber-car",
         name: "Midnight Neon Drifter",
-        image:
-          "https://images.unsplash.com/photo-1511919884226-fd3cad34687c?w=800&auto=format&fit=crop&q=80",
+        image: pexels(26732101),
         prompt:
           "Futuristic sleek sports car drifting through wet asphalt under towering cyberpunk skyscrapers, neon signs reflecting off polished chrome, glowing teal tire tracks, fast shutter speed, high dynamic range.",
         description:
@@ -82,8 +78,7 @@ export const STYLES_DATA: FolderData[] = [
       {
         id: "cyber-skyline",
         name: "Cyber-City Skyline",
-        image:
-          "https://images.unsplash.com/photo-1519501025264-65ba15a82390?w=800&auto=format&fit=crop&q=80",
+        image: pexels(20142441),
         prompt:
           "Panoramic vertical view of giant high-tech skyscrapers, glowing holographic flying fish in the sky, streams of bright yellow light lanes from traffic below, sci-fi dystopian metropolis, cinematic, extreme detail.",
         description:
@@ -103,16 +98,12 @@ export const STYLES_DATA: FolderData[] = [
     title: "Ghibli & Cozy Anime",
     description:
       "Soft hand-painted gouache style, bright summer sunlight, lush green nature, puffy white clouds, and a nostalgic, magical atmosphere.",
-    coverImage:
-      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&auto=format&fit=crop&q=80",
-    themeColor: "from-emerald-400 to-sky-400",
-    badgeColor: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+    coverImage: pexels(1671325),
     files: [
       {
         id: "ghibli-meadow",
         name: "Summer Grass Bridge",
-        image:
-          "https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=800&auto=format&fit=crop&q=80",
+        image: pexels(26840953),
         prompt:
           "Lush green summer meadow with a tiny red wooden footbridge over a clear running brook, endless sea of wildflowers, massive puffy white cumulus clouds in a brilliant blue sky, Studio Ghibli gouache painting style, warm sun rays, nostalgic.",
         description:
@@ -128,8 +119,7 @@ export const STYLES_DATA: FolderData[] = [
       {
         id: "cherry-train",
         name: "Spring Train Tracks",
-        image:
-          "https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?w=800&auto=format&fit=crop&q=80",
+        image: pexels(1367192),
         prompt:
           "A rustic train track curving through a tunnel of blooming cherry blossom trees, pink petals falling gently in the breeze, soft pastel morning fog, cozy anime scenery, Makoto Shinkai aesthetic, photorealistic anime, cinematic lighting.",
         description:
@@ -145,8 +135,7 @@ export const STYLES_DATA: FolderData[] = [
       {
         id: "anime-peaks",
         name: "Overcast Mountain Valley",
-        image:
-          "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&auto=format&fit=crop&q=80",
+        image: pexels(1761279),
         prompt:
           "Towering green mountains with majestic waterfalls cascading into a deep valley, a tiny cottage with smoke raising from the chimney, soft morning mist, watercolor and ink outline anime style, nostalgic illustration, hand-painted texture.",
         description:
@@ -162,8 +151,7 @@ export const STYLES_DATA: FolderData[] = [
       {
         id: "ghibli-market",
         name: "Cozy Lantern Street",
-        image:
-          "https://images.unsplash.com/photo-1506157786151-b8491531f063?w=800&auto=format&fit=crop&q=80",
+        image: pexels(1640777),
         prompt:
           "A magical bustling village night market, rows of wooden stalls selling food and potions, hundreds of warm floating paper lanterns lighting up the dark blue evening sky, soft cozy anime art style, nostalgic fantasy, hand-painted gouache look.",
         description:
@@ -179,8 +167,7 @@ export const STYLES_DATA: FolderData[] = [
       {
         id: "ghibli-kitchen",
         name: "Nostalgic Cozy Kitchen",
-        image:
-          "https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=800&auto=format&fit=crop&q=80",
+        image: pexels(32608379),
         prompt:
           "A warm and cluttered kitchen, a boiling clay pot of stew with rising steam on a pale green stove, sunlight streaming through a small window with potted herbs on the sill, hand-drawn anime interior, Studio Ghibli style, heartwarming.",
         description:
@@ -200,16 +187,12 @@ export const STYLES_DATA: FolderData[] = [
     title: "Impasto Oil Painting",
     description:
       "Thick textured brushstrokes, visible palette knife patterns, vibrant color blending, and an emphasis on the playful quality of light.",
-    coverImage:
-      "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=800&auto=format&fit=crop&q=80",
-    themeColor: "from-amber-500 to-rose-500",
-    badgeColor: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+    coverImage: pexels(28802631),
     files: [
       {
         id: "oil-fields",
         name: "Impasto Sunflower Valley",
-        image:
-          "https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=800&auto=format&fit=crop&q=80",
+        image: pexels(28626259),
         prompt:
           "A vast vibrant field of blooming sunflowers under a swirling blue and gold sky, thick impasto oil painting, heavy palette knife texture, highly raised paint layers, deep yellow and rich cobalt blue, post-impressionist masterpiece style.",
         description:
@@ -225,8 +208,7 @@ export const STYLES_DATA: FolderData[] = [
       {
         id: "swirling-vortex",
         name: "Vibrant Swirling Flow",
-        image:
-          "https://images.unsplash.com/photo-1541963463532-d68292c34b19?w=800&auto=format&fit=crop&q=80",
+        image: pexels(28901509),
         prompt:
           "An abstract swirling vortex of colors, thick textured oil brush strokes, deep navy, gold, and crimson red overlapping, dramatic lighting casting shadows on the thick paint ridges, masterpiece modern art, textured canvas.",
         description:
@@ -242,8 +224,7 @@ export const STYLES_DATA: FolderData[] = [
       {
         id: "venice-canal",
         name: "Venetian Palette Reflections",
-        image:
-          "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=800&auto=format&fit=crop&q=80",
+        image: pexels(29412595),
         prompt:
           "Impressionist colorful painting of Venice canal with historical buildings, gondola sliding through water, water reflections broken into rich dabs of paint, vibrant sunset sky, loose expressive brushwork, fine art gallery piece.",
         description:
@@ -259,8 +240,7 @@ export const STYLES_DATA: FolderData[] = [
       {
         id: "oil-sea",
         name: "Stormy Sea Cliffs",
-        image:
-          "https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=800&auto=format&fit=crop&q=80",
+        image: pexels(1269968),
         prompt:
           "Violent turquoise and deep indigo waves crashing against dark, jagged ocean cliffs, thick impasto oils, heavy palette knife scoring, white sea foam depicted with raised three-dimensional pure titanium white oil paint, tempestuous sky.",
         description:
@@ -276,8 +256,7 @@ export const STYLES_DATA: FolderData[] = [
       {
         id: "oil-cafe",
         name: "Vibrant Cafe Terrace",
-        image:
-          "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800&auto=format&fit=crop&q=80",
+        image: pexels(1570779),
         prompt:
           "Cozy cobblestone street corner cafe at night under warm yellow gaslamps, colorful dabs of orange, red, and blue indicating customers, expressive thick paint application, post-impressionist oil painting style.",
         description:
@@ -297,16 +276,12 @@ export const STYLES_DATA: FolderData[] = [
     title: "Minimal Geometric & Vector",
     description:
       "Flat illustration style, clean geometric paths, warm pastel color palettes, continuous lines, and smart use of negative space.",
-    coverImage:
-      "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80",
-    themeColor: "from-violet-400 to-indigo-500",
-    badgeColor: "bg-violet-500/10 text-violet-400 border-violet-500/20",
+    coverImage: pexels(19354503),
     files: [
       {
         id: "abstract-shapes",
         name: "Fluid Geometric Blocks",
-        image:
-          "https://images.unsplash.com/photo-1557672172-298e090bd0f1?w=800&auto=format&fit=crop&q=80",
+        image: pexels(33923497),
         prompt:
           "Minimalist graphic art of organic interlocking geometric shapes, warm desert pastel colors, sand, terracotta, olive green, cream white, soft shadows, clean vectors, high aesthetic design, Scandinavian poster style.",
         description:
@@ -322,8 +297,7 @@ export const STYLES_DATA: FolderData[] = [
       {
         id: "isometric-zen",
         name: "Minimalist Concrete Villa",
-        image:
-          "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&auto=format&fit=crop&q=80",
+        image: pexels(32573502),
         prompt:
           "Isometric vector illustration of a modern minimalist architectural villa made of glass and concrete, tiny green pine tree, clean water pool reflecting structural lines, soft warm lighting, minimalist background, 3D vector art.",
         description:
@@ -339,8 +313,7 @@ export const STYLES_DATA: FolderData[] = [
       {
         id: "line-botany",
         name: "Continuous Botanical Line Art",
-        image:
-          "https://images.unsplash.com/photo-1576016770956-debb63d900bb?w=800&auto=format&fit=crop&q=80",
+        image: pexels(33923506),
         prompt:
           "Continuous single-line art of tropical monstera and palm leaves, elegant black stroke on a warm cream-colored textured paper, minimalist design, high contrast, elegant fine-line drawing, boho home decor print.",
         description:
@@ -356,8 +329,7 @@ export const STYLES_DATA: FolderData[] = [
       {
         id: "minimal-desert",
         name: "Pastel Desert Arch",
-        image:
-          "https://images.unsplash.com/photo-1500627869374-13cd993b1115?w=800&auto=format&fit=crop&q=80",
+        image: pexels(36129068),
         prompt:
           "Minimal graphic vector art of a tall terracotta stucco archway in a clean desert with pale sand, soft blue skies, elegant palm branch silhouette casting a delicate shadow, clean vector lines, mid-century modern aesthetic.",
         description: "Balanced structural geometry featuring warm clay and cool azure contrasts.",
@@ -372,8 +344,7 @@ export const STYLES_DATA: FolderData[] = [
       {
         id: "geometric-cats",
         name: "Minimalist Bauhaus Cat",
-        image:
-          "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=800&auto=format&fit=crop&q=80",
+        image: pexels(30797926),
         prompt:
           "Highly simplified abstract geometric composition of a sleeping cat, composed entirely of interlocking semicircles, triangles, and thin black lines, solid pastel yellow, coral, and navy blue, Swiss design style poster.",
         description:
@@ -393,16 +364,12 @@ export const STYLES_DATA: FolderData[] = [
     title: "Cinematic Film Noir",
     description:
       "High-contrast monochrome, dramatic silhouettes, light beams shining through fog, deep moody shadows, and cinematic storytelling.",
-    coverImage:
-      "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=800&auto=format&fit=crop&q=80",
-    themeColor: "from-slate-700 to-zinc-900",
-    badgeColor: "bg-zinc-500/10 text-zinc-300 border-zinc-500/20",
+    coverImage: pexels(19684018),
     files: [
       {
         id: "noir-boulevard",
         name: "Rainy Midnight Silhouette",
-        image:
-          "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=800&auto=format&fit=crop&q=80",
+        image: pexels(36701089),
         prompt:
           "Cinematic black and white photography, a solitary figure in a trench coat and fedora walking down a wet cobblestone street at midnight, silhouette cast by a single glowing streetlight, heavy fog, high contrast, film grain.",
         description:
@@ -418,8 +385,7 @@ export const STYLES_DATA: FolderData[] = [
       {
         id: "noir-jazz",
         name: "Smoky Brass Shadows",
-        image:
-          "https://images.unsplash.com/photo-1486591978090-58e619d37fe7?w=800&auto=format&fit=crop&q=80",
+        image: pexels(14364672),
         prompt:
           "Atmospheric jazz club stage close-up of a vintage brass trumpet glistening under a single warm golden spotlight, thick tobacco smoke curling in the air, deep black shadows, moody cinema grain, anamorphic flare.",
         description:
@@ -435,8 +401,7 @@ export const STYLES_DATA: FolderData[] = [
       {
         id: "neon-passage",
         name: "Fluorescent Concrete Void",
-        image:
-          "https://images.unsplash.com/photo-1515462277126-270d878326e5?w=800&auto=format&fit=crop&q=80",
+        image: pexels(15861219),
         prompt:
           "An empty industrial concrete subway passage, single glowing green fluorescent bar light on the wall casting an eerie toxic green glow, deep shadows, cinematic mystery, raw brutalist architecture, depth.",
         description:
@@ -452,8 +417,7 @@ export const STYLES_DATA: FolderData[] = [
       {
         id: "noir-diner",
         name: "Rainy Window Diner",
-        image:
-          "https://images.unsplash.com/photo-1543007630-9710e4a00a20?w=800&auto=format&fit=crop&q=80",
+        image: pexels(5366568),
         prompt:
           "Medium shot looking through a rain-streaked diner window at night, warm yellow interior lights glowing through condensation, a single customer reading at the counter, neon diner sign glowing red in the background, film grain, nostalgic.",
         description:
@@ -469,8 +433,7 @@ export const STYLES_DATA: FolderData[] = [
       {
         id: "noir-bridge",
         name: "Industrial Steel Bridge",
-        image:
-          "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&auto=format&fit=crop&q=80",
+        image: pexels(24235386),
         prompt:
           "Brutalist silhouette of massive steel bridge girders towering into a thick white morning fog, light from an unseen sun casting soft grey gradients, moody, minimalist industrial cinematic atmosphere, high dynamic range black and white.",
         description:

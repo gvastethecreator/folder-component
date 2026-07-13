@@ -1,8 +1,28 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
-import { FolderData, SpringSettings } from "../types";
+import { memo, useEffect, useRef, useState } from "react";
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
+import {
+  createFolderEngineController,
+  type CardTransform,
+  type FolderEngineController,
+  type FolderEngineOptions,
+} from "../animation/folderEngines";
+import ImageWithFallback, { neutralTone } from "./ImageWithFallback";
+import type { AnimationEngine, DeploymentStyle, FolderData, SpringSettings } from "../types";
 
-const EASE_OUT_QUINT: [number, number, number, number] = [0.25, 1, 0.5, 1];
+gsap.registerPlugin(useGSAP);
+
+const srcSetCache = new Map<string, string>();
+
+function pexelsSrcSet(source: string) {
+  const cached = srcSetCache.get(source);
+  if (cached) return cached;
+
+  const medium = source.replace("w=800&h=1000", "w=480&h=600");
+  const srcSet = `${medium} 480w, ${source} 800w`;
+  srcSetCache.set(source, srcSet);
+  return srcSet;
+}
 
 interface StyleFolderProps {
   folder: FolderData;
@@ -13,16 +33,137 @@ interface StyleFolderProps {
   fanDirection: "symmetrical" | "left" | "right";
   fanAngle: number;
   coverTilt: number;
-  // New customization props
-  deploymentStyle: "fan" | "skew3d" | "cascade" | "scatter" | "horizontal_stack";
+  deploymentStyle: DeploymentStyle;
   staggerDelay: number;
   clickBehavior: "pulse" | "toggle" | "flash";
   transitionCurve: "spring" | "tween";
   folderShape: "vertical" | "square" | "horizontal";
   cardStyle: "classic" | "folder";
+  priority?: boolean;
+  compact?: boolean;
+  textureEnabled?: boolean;
+  tabFill?: "color" | "image";
+  tabColor?: string;
+  visualSource?: "image" | "tone";
+  animationEngine?: AnimationEngine;
 }
 
-export default function StyleFolder({
+const clamp = (minimum: number, maximum: number, value: number) =>
+  Math.min(maximum, Math.max(minimum, value));
+
+function collapsedTransform(
+  index: number,
+  count: number,
+  fanDirection: StyleFolderProps["fanDirection"],
+  deploymentStyle: DeploymentStyle,
+  layoutScale: number,
+): CardTransform {
+  let rotation = 0;
+
+  if (deploymentStyle !== "cascade" && deploymentStyle !== "horizontal_stack") {
+    if (fanDirection === "symmetrical") {
+      rotation = (index - (count - 1) / 2) * 1.25;
+    } else if (fanDirection === "left") {
+      rotation = (index - count) * 0.8;
+    } else {
+      rotation = (index + 1) * 0.8;
+    }
+  }
+
+  return {
+    x: 0,
+    y: index * -4 * layoutScale,
+    rotation,
+    scale: 0.95 + index * 0.015,
+  };
+}
+
+function expandedTransform(
+  index: number,
+  count: number,
+  {
+    deploymentStyle,
+    fanDirection,
+    fanAngle,
+    orientation,
+    spacingMultiplier,
+    layoutScale,
+  }: Pick<
+    StyleFolderProps,
+    "deploymentStyle" | "fanDirection" | "fanAngle" | "orientation" | "spacingMultiplier"
+  > & { layoutScale: number },
+): CardTransform {
+  let x = 0;
+  let y = 0;
+  let rotation = 0;
+  let scale = 1;
+
+  if (deploymentStyle === "skew3d") {
+    rotation = (index - (count - 1) / 2) * 3.5;
+    y = -38 * layoutScale * spacingMultiplier * (count - index);
+    x = (index - (count - 1) / 2) * 25 * layoutScale * spacingMultiplier;
+    scale = 0.96 + index * 0.02;
+  } else if (deploymentStyle === "cascade") {
+    x = (index + 1) * 32 * layoutScale * spacingMultiplier;
+    y = -(index + 1) * 31 * layoutScale * spacingMultiplier;
+  } else if (deploymentStyle === "horizontal_stack") {
+    const direction = fanDirection === "left" ? -1 : 1;
+    x = (index + 1) * 32 * layoutScale * spacingMultiplier * direction;
+    y = -14 * layoutScale * spacingMultiplier;
+    rotation = (index % 2 === 0 ? 1 : -1) * (fanAngle / 3.5);
+  } else if (deploymentStyle === "scatter") {
+    const scatterX = [-42, 46, -16, 34, -28];
+    const scatterY = [-68, -82, -94, -72, -86];
+    const scatterRotation = [-8, 10, -5, 7, -7];
+    x = scatterX[index % scatterX.length] * layoutScale * spacingMultiplier;
+    y = scatterY[index % scatterY.length] * layoutScale * spacingMultiplier;
+    rotation = scatterRotation[index % scatterRotation.length] * (fanAngle / 6);
+  } else {
+    if (fanDirection === "symmetrical") {
+      rotation = (index - (count - 1) / 2) * fanAngle;
+    } else if (fanDirection === "left") {
+      rotation = (index - count) * fanAngle * 0.75;
+    } else {
+      rotation = (index + 1) * fanAngle * 0.75;
+    }
+
+    if (orientation === "vertical") {
+      y = -(count - index) * 43 * layoutScale * spacingMultiplier;
+      if (fanDirection === "left") {
+        x = (index - count) * 10 * layoutScale * spacingMultiplier;
+      } else if (fanDirection === "right") {
+        x = (index + 1) * 10 * layoutScale * spacingMultiplier;
+      }
+    } else if (fanDirection === "symmetrical") {
+      const middle = (count - 1) / 2;
+      x = (index - middle) * 50 * layoutScale * spacingMultiplier;
+      y = (Math.abs(index - middle) * 7 - 14) * layoutScale;
+    } else {
+      const direction = fanDirection === "left" ? -1 : 1;
+      const order = fanDirection === "left" ? count - index : index + 1;
+      x = order * 35 * layoutScale * spacingMultiplier * direction;
+      y = (index - 1) * -4 * layoutScale;
+    }
+  }
+
+  return { x, y, rotation, scale };
+}
+
+function useReducedMotionPreference() {
+  const [reducedMotion, setReducedMotion] = useState(false);
+
+  useEffect(() => {
+    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setReducedMotion(query.matches);
+    update();
+    query.addEventListener?.("change", update);
+    return () => query.removeEventListener?.("change", update);
+  }, []);
+
+  return reducedMotion;
+}
+
+function StyleFolder({
   folder,
   orientation,
   springSettings,
@@ -37,368 +178,391 @@ export default function StyleFolder({
   transitionCurve,
   folderShape,
   cardStyle,
+  priority = false,
+  compact = false,
+  textureEnabled = false,
+  tabFill = "image",
+  tabColor = "#3f3f46",
+  visualSource = "image",
+  animationEngine = "gsap",
 }: StyleFolderProps) {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const frontRef = useRef<HTMLDivElement>(null);
+  const flashRef = useRef<HTMLDivElement>(null);
+  const cardRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const engineControllerRef = useRef<FolderEngineController | null>(null);
+  const isOpenRef = useRef(false);
+  const reducedMotion = useReducedMotionPreference();
+  const supportsVisibilityDeferral =
+    typeof IntersectionObserver !== "undefined" &&
+    !navigator.userAgent.toLowerCase().includes("jsdom");
   const [isHovered, setIsHovered] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
-  const [isFlashed, setIsFlashed] = useState(false);
+  const [isNearViewport, setIsNearViewport] = useState(priority || !supportsVisibilityDeferral);
 
-  const { files } = folder;
-  // Limit the files rendered to the visible card count configured in settings
-  const activeFiles = files.slice(0, visibleCardsCount);
+  const activeFiles = folder.files.slice(0, visibleCardsCount);
+  const isOpen = isHovered || isFocused || isLocked;
+  isOpenRef.current = isOpen;
+  const layoutScale = compact ? 0.5 : 1;
 
-  // Combine hover state and toggle lock state
-  const isOpen = isHovered || isLocked;
+  useEffect(() => {
+    if (isNearViewport || !supportsVisibilityDeferral || !rootRef.current) return;
 
-  const handleFolderClick = () => {
-    if (clickBehavior === "toggle") {
-      setIsLocked(!isLocked);
-    } else if (clickBehavior === "flash") {
-      setIsFlashed(true);
-      setTimeout(() => setIsFlashed(false), 400);
-    }
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting) return;
+        setIsNearViewport(true);
+        observer.disconnect();
+      },
+      { rootMargin: "480px 160px" },
+    );
+
+    observer.observe(rootRef.current);
+    return () => observer.disconnect();
+  }, [isNearViewport, supportsVisibilityDeferral]);
+
+  useEffect(() => {
+    if (clickBehavior !== "toggle") setIsLocked(false);
+  }, [clickBehavior]);
+
+  const getEngineOptions = (): FolderEngineOptions | null => {
+    const root = rootRef.current;
+    const front = frontRef.current;
+    const cards = cardRefs.current.slice(0, activeFiles.length).filter(Boolean) as HTMLDivElement[];
+    if (!root || !front || cards.length === 0) return null;
+
+    return {
+      engine: animationEngine,
+      root,
+      cards,
+      front,
+      flash: flashRef.current,
+      collapsed: cards.map((_, index) =>
+        collapsedTransform(index, cards.length, fanDirection, deploymentStyle, layoutScale),
+      ),
+      expanded: cards.map((_, index) =>
+        expandedTransform(index, cards.length, {
+          deploymentStyle,
+          fanDirection,
+          fanAngle,
+          orientation,
+          spacingMultiplier,
+          layoutScale,
+        }),
+      ),
+      frontOpen: {
+        y: clamp(2, 7, Math.abs(coverTilt) / 4),
+        scale: clamp(0.95, 0.99, 1 - Math.abs(coverTilt) / 800),
+      },
+      initialOpen: isOpenRef.current,
+      reducedMotion,
+      transitionCurve,
+      springSettings,
+      duration:
+        transitionCurve === "spring"
+          ? clamp(0.34, 0.72, 0.58 + springSettings.mass * 0.08 - springSettings.stiffness / 1250)
+          : 0.38,
+      staggerDelay,
+    };
   };
 
-  // Map folder shape to sizing classes with mobile-first responsiveness
-  const shapeClasses = {
-    vertical: "w-72 h-96 max-w-full",
-    square: "w-72 h-72 max-w-full",
-    horizontal: "w-80 sm:w-96 h-56 sm:h-64 max-w-full",
-  }[folderShape || "vertical"];
+  useGSAP(
+    (_context, contextSafe) => {
+      if (animationEngine !== "gsap" || !isNearViewport) return;
+      const options = getEngineOptions();
+      if (!options) return;
+
+      const controller = createFolderEngineController(options);
+      const safeController: FolderEngineController = {
+        setOpen: contextSafe!(controller.setOpen),
+        pulse: contextSafe!(controller.pulse),
+        flash: contextSafe!(controller.flash),
+        destroy: controller.destroy,
+      };
+      engineControllerRef.current = safeController;
+
+      return () => {
+        controller.destroy();
+        if (engineControllerRef.current === safeController) engineControllerRef.current = null;
+      };
+    },
+    {
+      scope: rootRef,
+      dependencies: [
+        animationEngine,
+        isNearViewport,
+        activeFiles.length,
+        deploymentStyle,
+        fanDirection,
+        fanAngle,
+        orientation,
+        spacingMultiplier,
+        layoutScale,
+        coverTilt,
+        staggerDelay,
+        transitionCurve,
+        springSettings.stiffness,
+        springSettings.damping,
+        springSettings.mass,
+        reducedMotion,
+      ],
+      revertOnUpdate: true,
+    },
+  );
+
+  useEffect(() => {
+    if (animationEngine === "gsap" || !isNearViewport) return;
+    const options = getEngineOptions();
+    if (!options) return;
+
+    const controller = createFolderEngineController(options);
+    engineControllerRef.current = controller;
+
+    return () => {
+      controller.destroy();
+      if (engineControllerRef.current === controller) engineControllerRef.current = null;
+    };
+  }, [
+    animationEngine,
+    isNearViewport,
+    activeFiles.length,
+    deploymentStyle,
+    fanDirection,
+    fanAngle,
+    orientation,
+    spacingMultiplier,
+    layoutScale,
+    coverTilt,
+    staggerDelay,
+    transitionCurve,
+    springSettings.stiffness,
+    springSettings.damping,
+    springSettings.mass,
+    reducedMotion,
+  ]);
+
+  useEffect(() => {
+    if (!isNearViewport) return;
+    engineControllerRef.current?.setOpen(isOpen);
+  }, [animationEngine, isOpen, isNearViewport]);
+
+  const handleFolderClick = () => {
+    if (clickBehavior === "toggle") setIsLocked((current) => !current);
+    if (clickBehavior === "pulse") engineControllerRef.current?.pulse();
+    if (clickBehavior === "flash") engineControllerRef.current?.flash();
+  };
+
+  const shapeClasses = compact
+    ? {
+        vertical: "h-52 w-36 xl:w-40",
+        square: "h-36 w-36 xl:h-40 xl:w-40",
+        horizontal: "h-28 w-40 xl:h-32 xl:w-44",
+      }[folderShape]
+    : {
+        vertical: "h-96 w-72",
+        square: "h-72 w-72",
+        horizontal: "h-56 w-80 sm:h-64 sm:w-96",
+      }[folderShape];
+
+  const imageSizes = compact ? "160px" : folderShape === "horizontal" ? "384px" : "288px";
 
   return (
     <div
+      ref={rootRef}
       id={`folder-container-${folder.id}`}
-      className={`relative ${shapeClasses} select-none group rounded-2xl transition-all duration-300 hover:scale-[1.02] ${
-        clickBehavior === "toggle" ? "cursor-pointer" : "cursor-pointer"
-      }`}
-      style={{ perspective: "1200px" }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      className={`style-folder group relative max-w-full cursor-pointer select-none rounded-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral-200 ${shapeClasses}`}
+      role="button"
+      tabIndex={0}
+      aria-expanded={isOpen}
+      aria-label={`${folder.title}. ${folder.files.length} style cards.`}
+      data-animation-engine={animationEngine}
+      data-deployment={deploymentStyle}
+      data-visual-source={visualSource}
+      data-tab-fill={tabFill}
+      data-texture-enabled={textureEnabled}
+      onPointerEnter={() => setIsHovered(true)}
+      onPointerLeave={() => setIsHovered(false)}
+      onFocus={() => setIsFocused(true)}
+      onBlur={() => setIsFocused(false)}
       onClick={handleFolderClick}
+      onKeyDown={(event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        handleFolderClick();
+      }}
     >
-      {/* 1. FOLDER BACK PANEL */}
       <div
         id={`folder-back-${folder.id}`}
-        className={`absolute inset-0 bg-neutral-900 shadow-2xl transition-colors duration-300 overflow-hidden ${
-          cardStyle === "folder" ? "rounded-2xl rounded-tl-none" : "rounded-2xl"
+        className={`folder-back absolute inset-0 border border-neutral-700/70 bg-neutral-900 ${
+          cardStyle === "folder" ? "rounded-xl rounded-tl-sm" : "rounded-xl"
         }`}
-        style={{
-          transform: "translate3d(0, 0, 0)",
-          backfaceVisibility: "hidden",
-          WebkitBackfaceVisibility: "hidden",
-          WebkitMaskImage: "-webkit-radial-gradient(white, black)",
-          isolation: "isolate",
-          willChange: "transform",
-        }}
+        style={{ boxShadow: "0 14px 28px rgb(0 0 0 / 0.24)" }}
       >
-        {/* Blurred cover image background for physical folder appearance matching style color */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <img
-            src={folder.coverImage}
-            alt=""
-            className="w-full h-full object-cover scale-150 blur-2xl opacity-40 saturate-150"
-            referrerPolicy="no-referrer"
-          />
-          <div className="absolute inset-0 bg-neutral-950/60" />
-        </div>
-
-        {/* Folder tab on back - also blurred cover image */}
         {cardStyle === "folder" && (
           <div
-            className="absolute -top-4 left-0 h-4 w-28 rounded-t-xl transition-colors duration-300 overflow-hidden"
-            style={{
-              clipPath: "polygon(0 0, 85% 0, 100% 100%, 0 100%)",
-              WebkitMaskImage: "-webkit-radial-gradient(white, black)",
-            }}
+            className="absolute -top-3 left-0 h-3 w-20 overflow-hidden rounded-t-md border-x border-t border-neutral-700/70 bg-neutral-800"
+            style={{ clipPath: "polygon(0 0, 82% 0, 100% 100%, 0 100%)" }}
+            aria-hidden="true"
           >
-            <img
-              src={folder.coverImage}
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover scale-150 blur-lg opacity-45 saturate-150"
-              referrerPolicy="no-referrer"
-            />
-            <div className="absolute inset-0 bg-neutral-950/50" />
+            {tabFill === "image" && visualSource === "image" ? (
+              <ImageWithFallback
+                src={folder.coverImage}
+                srcSet={pexelsSrcSet(folder.coverImage)}
+                sizes="80px"
+                alt=""
+                fallbackSeed={folder.id}
+                width={800}
+                height={1000}
+                className="h-full w-full scale-110 object-cover opacity-80 blur-[2px]"
+                referrerPolicy="no-referrer"
+                loading="lazy"
+                decoding="async"
+                draggable={false}
+              />
+            ) : (
+              <span
+                className="block h-full w-full"
+                style={{
+                  backgroundColor: tabFill === "color" ? tabColor : neutralTone(folder.id),
+                }}
+              />
+            )}
           </div>
         )}
 
-        {/* Grid dots visual styling inside the back folder */}
-        <div className="absolute inset-4 rounded-xl opacity-10 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:12px_12px]" />
+        <div className="absolute inset-x-3 top-3 flex items-center justify-between font-mono text-[7px] tracking-[0.12em] text-neutral-300">
+          <span>STACK</span>
+          <span>{String(folder.files.length).padStart(2, "0")}</span>
+        </div>
       </div>
 
-      {/* 2. STYLE CARDS (FILES) IN THE MIDDLE */}
-      {activeFiles.map((file, idx) => {
-        // Calculate animations depending on index & orientation & custom directions
-        let x = 0;
-        let y = 0;
-        let rotate = 0;
-        let rotateY = 0;
-        let rotateX = 0;
-        let z = 0;
-        let scale = 0.94 + idx * 0.02; // stacked scale
-
-        const count = activeFiles.length;
-
-        // Custom transition per card with dynamic stagger delay
-        // Flipping the stagger order on exit (collapse) ensures an incredibly organic feel
-        const transition = {
-          type: transitionCurve,
-          ...(transitionCurve === "spring"
-            ? {
-                stiffness: springSettings.stiffness,
-                damping: springSettings.damping,
-                mass: springSettings.mass,
-              }
-            : {
-                duration: 0.38,
-                ease: EASE_OUT_QUINT, // premium easeOutQuint
-              }),
-          delay: isOpen ? idx * staggerDelay : (count - 1 - idx) * staggerDelay * 0.6,
-        };
-
-        if (isOpen) {
-          scale = 1.0;
-
-          if (deploymentStyle === "skew3d") {
-            // Elegant 3D layered stacking
-            rotateY = (idx - (count - 1) / 2) * 16;
-            rotateX = -8;
-            z = idx * 25;
-            y = -42 * spacingMultiplier * (count - idx);
-            x = (idx - (count - 1) / 2) * 28 * spacingMultiplier;
-          } else if (deploymentStyle === "cascade") {
-            // Straight diagonal staircase cascade
-            x = (idx + 1) * 36 * spacingMultiplier;
-            y = -(idx + 1) * 32 * spacingMultiplier;
-            rotate = 0;
-          } else if (deploymentStyle === "horizontal_stack") {
-            // Horizontal stack towards one side (left or right depending on fanDirection)
-            const dirMultiplier = fanDirection === "left" ? -1 : 1;
-            x = (idx + 1) * 68 * spacingMultiplier * dirMultiplier;
-            y = -15 * spacingMultiplier; // raise slightly to clear folder front
-            rotate = (idx % 2 === 0 ? 1 : -1) * 2 * (fanAngle / 6); // elegant micro-tilt
-          } else if (deploymentStyle === "scatter") {
-            // Organic random scatter
-            const scatterX = [-45, 50, -18, 38, -32];
-            const scatterY = [-70, -85, -100, -75, -90];
-            const scatterRotate = [-10, 12, -6, 8, -8];
-            x = scatterX[idx % scatterX.length] * spacingMultiplier;
-            y = scatterY[idx % scatterY.length] * spacingMultiplier;
-            rotate = scatterRotate[idx % scatterRotate.length] * (fanAngle / 6);
-          } else {
-            // "fan" (Standard Fan style)
-            if (fanDirection === "symmetrical") {
-              const midIndex = (count - 1) / 2;
-              rotate = (idx - midIndex) * fanAngle;
-            } else if (fanDirection === "left") {
-              rotate = (idx - count) * fanAngle * 0.75;
-            } else if (fanDirection === "right") {
-              rotate = (idx + 1) * fanAngle * 0.75;
-            }
-
-            if (orientation === "vertical") {
-              const offset = (count - idx) * 45 * spacingMultiplier;
-              y = -offset;
-              if (fanDirection === "left") {
-                x = (idx - count) * 12 * spacingMultiplier;
-              } else if (fanDirection === "right") {
-                x = (idx + 1) * 12 * spacingMultiplier;
-              }
-            } else {
-              if (fanDirection === "symmetrical") {
-                const midIndex = (count - 1) / 2;
-                x = (idx - midIndex) * 55 * spacingMultiplier;
-                y = Math.abs(idx - midIndex) * 8 - 15;
-              } else if (fanDirection === "left") {
-                const offset = (count - idx) * 38 * spacingMultiplier;
-                x = -offset;
-                y = (idx - 1) * -4;
-              } else {
-                const offset = (idx + 1) * 38 * spacingMultiplier;
-                x = offset;
-                y = (idx - 1) * -4;
-              }
-            }
-          }
-        } else {
-          // Collapsed state
-          y = idx * -4;
-          if (deploymentStyle !== "cascade" && deploymentStyle !== "horizontal_stack") {
-            if (fanDirection === "symmetrical") {
-              const midIndex = (count - 1) / 2;
-              rotate = (idx - midIndex) * 1.5;
-            } else if (fanDirection === "left") {
-              rotate = (idx - count) * 1.0;
-            } else {
-              rotate = (idx + 1) * 1.0;
-            }
-          }
-        }
-
-        return (
-          <motion.div
+      {isNearViewport &&
+        activeFiles.map((file, index) => (
+          <div
             key={file.id}
+            ref={(element) => {
+              cardRefs.current[index] = element;
+            }}
             id={`file-card-${folder.id}-${file.id}`}
-            className="absolute inset-4 bg-neutral-950 rounded-xl overflow-hidden shadow-2xl border border-neutral-800/40"
+            className={`${compact ? "absolute inset-2" : "absolute inset-4"} file-card pointer-events-none overflow-hidden rounded-lg border border-neutral-700/80 bg-neutral-950`}
             style={{
-              zIndex: 10 + idx,
+              zIndex: 10 + index,
               transformOrigin: "bottom center",
-              WebkitMaskImage: "-webkit-radial-gradient(white, black)",
+              boxShadow: "0 10px 20px rgb(0 0 0 / 0.28)",
             }}
-            animate={{
-              x,
-              y,
-              rotate,
-              rotateX,
-              rotateY,
-              z,
-              scale,
-            }}
-            transition={transition}
           >
-            {/* Elegant pure style card - Image only */}
-            <img
-              src={file.image}
-              alt={file.name}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-              referrerPolicy="no-referrer"
-              loading="lazy"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
-
-            {/* Subtle caption of file name */}
-            <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-sm border border-white/5 px-2 py-0.5 rounded text-[8px] text-neutral-300 font-mono">
-              {file.name}
+            {visualSource === "image" ? (
+              <ImageWithFallback
+                src={file.image}
+                srcSet={pexelsSrcSet(file.image)}
+                sizes={compact ? "160px" : folderShape === "horizontal" ? "352px" : "256px"}
+                alt={file.name}
+                fallbackSeed={file.id}
+                fallbackOffset={index + 1}
+                width={800}
+                height={1000}
+                className="h-full w-full object-cover"
+                referrerPolicy="no-referrer"
+                loading="lazy"
+                decoding="async"
+                draggable={false}
+              />
+            ) : (
+              <div
+                role="img"
+                aria-label={file.name}
+                className="h-full w-full"
+                data-image-state="tone"
+                style={{ backgroundColor: neutralTone(file.id, index + 1) }}
+              />
+            )}
+            <div className="absolute inset-x-0 bottom-0 border-t border-white/10 bg-black/80 px-2 py-1.5">
+              <span className="block truncate font-mono text-[7px] tracking-wide text-neutral-300">
+                {file.name}
+              </span>
             </div>
-          </motion.div>
-        );
-      })}
+          </div>
+        ))}
 
-      {/* 3. FOLDER FRONT PANEL */}
-      {/* Acts as the cover, tilts forward slightly in 3D on hover or toggle state */}
-      <motion.div
+      <div
+        ref={frontRef}
         id={`folder-front-${folder.id}`}
         className="absolute inset-0"
         style={{
           zIndex: 30,
           transformOrigin: "bottom center",
-          transform: "translate3d(0, 0, 0)",
-          backfaceVisibility: "hidden",
-          WebkitBackfaceVisibility: "hidden",
-          isolation: "isolate",
-          willChange: "transform",
-        }}
-        animate={{
-          rotateX: isOpen ? coverTilt : 0,
-          y: isOpen ? 4 : 0,
-          scale: isOpen ? 0.98 : 1,
-        }}
-        whileTap={clickBehavior === "pulse" ? { scale: 0.94, rotate: -0.5 } : {}}
-        transition={{
-          type: transitionCurve,
-          ...(transitionCurve === "spring"
-            ? {
-                stiffness: springSettings.stiffness,
-                damping: springSettings.damping,
-                mass: springSettings.mass,
-              }
-            : {
-                duration: 0.35,
-                ease: EASE_OUT_QUINT,
-              }),
         }}
       >
-        {cardStyle === "folder" && (
-          /* Folder tab on front cover */
-          <div
-            className="absolute -top-3 left-4 h-3.5 w-24 rounded-t-lg bg-neutral-800 border-t border-x border-neutral-700/30 overflow-hidden"
-            style={{
-              clipPath: "polygon(0 0, 85% 0, 100% 100%, 0 100%)",
-              WebkitMaskImage: "-webkit-radial-gradient(white, black)",
-            }}
-          >
-            <img
-              src={folder.coverImage}
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover scale-150 blur-md opacity-45 saturate-150"
-              referrerPolicy="no-referrer"
-            />
-            <div className="absolute inset-0 bg-neutral-950/45" />
-          </div>
-        )}
-
         <div
-          className={`absolute inset-0 bg-gradient-to-b from-neutral-800 to-neutral-900 shadow-2xl flex flex-col justify-end overflow-hidden border border-neutral-700/30 ${
-            cardStyle === "folder" ? "rounded-2xl rounded-tl-none" : "rounded-2xl"
+          className={`folder-front absolute inset-0 overflow-hidden border border-neutral-700/80 bg-neutral-900 ${
+            cardStyle === "folder" ? "rounded-xl rounded-tl-sm" : "rounded-xl"
           }`}
-          style={{
-            WebkitMaskImage: "-webkit-radial-gradient(white, black)",
-            isolation: "isolate",
-          }}
+          style={{ boxShadow: "0 16px 32px rgb(0 0 0 / 0.3), inset 0 1px rgb(255 255 255 / 0.05)" }}
         >
-          {/* Cover Image inside the folder front - spanning full height */}
-          <div className="absolute inset-0 w-full h-full bg-neutral-950 overflow-hidden">
-            <img
+          {visualSource === "image" ? (
+            <ImageWithFallback
               src={folder.coverImage}
+              srcSet={pexelsSrcSet(folder.coverImage)}
+              sizes={imageSizes}
               alt={folder.title}
-              className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+              fallbackSeed={folder.id}
+              width={800}
+              height={1000}
+              className="h-full w-full object-cover"
               referrerPolicy="no-referrer"
+              loading={priority ? "eager" : "lazy"}
+              fetchPriority={priority ? "high" : "auto"}
+              decoding="async"
+              draggable={false}
             />
-            {/* Neon gradient mesh border matching folder theme */}
+          ) : (
             <div
-              className={`absolute inset-0 bg-gradient-to-t ${folder.themeColor} opacity-20 mix-blend-color-dodge`}
+              role="img"
+              aria-label={folder.title}
+              className="h-full w-full"
+              data-image-state="tone"
+              style={{ backgroundColor: neutralTone(folder.id, 8) }}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/45 to-transparent opacity-95" />
-          </div>
-
-          {/* Fold reflection effect */}
-          <div className="absolute top-0 inset-x-0 h-28 bg-gradient-to-b from-white/10 to-transparent pointer-events-none z-10" />
-
-          {/* Elegant glass light sweep on hover */}
-          <div
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out pointer-events-none z-15"
-            style={{ transform: isOpen ? "none" : undefined }}
-          />
-
-          {/* Flash overlay for click visual feedback */}
-          <AnimatePresence>
-            {isFlashed && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 0.45 }}
-                exit={{ opacity: 0 }}
-                className={`absolute inset-0 bg-gradient-to-tr ${folder.themeColor} mix-blend-screen pointer-events-none z-15`}
-                transition={{ duration: 0.2 }}
-              />
-            )}
-          </AnimatePresence>
-
-          {/* Lock open indicator icon/badge */}
-          {isLocked && (
-            <div className="absolute top-3 right-3 bg-indigo-500/90 text-white rounded-full p-1 text-[10px] shadow-lg flex items-center justify-center font-bold tracking-tight animate-pulse z-25">
-              🔒 LOCK
-            </div>
           )}
 
-          {/* Folder Label Body - Compact overlay with elegant backdrop blur */}
-          <div className="p-3.5 bg-neutral-950/70 backdrop-blur-md flex flex-col justify-between gap-1 z-20 w-full">
-            <div>
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-neutral-100 tracking-tight flex items-center gap-2">
-                  {folder.title}
-                </h3>
-                <span
-                  className={`px-2 py-0.5 text-[9px] font-medium tracking-wide uppercase rounded-full ${folder.badgeColor} backdrop-blur-md`}
-                >
-                  {folder.files.length}
-                </span>
-              </div>
-              <p className="text-[10px] text-neutral-300 line-clamp-2 mt-0.5 leading-relaxed">
+          <div className="folder-label absolute inset-x-0 bottom-0 border-t border-white/10 bg-neutral-950/95 p-2.5">
+            <div className="flex min-w-0 items-center justify-between gap-2">
+              <span
+                className="min-w-0 truncate text-[10px] font-medium tracking-tight text-neutral-100"
+                title={folder.title}
+              >
+                {folder.title}
+              </span>
+              <span className="shrink-0 font-mono text-[8px] tabular-nums text-neutral-300">
+                {String(folder.files.length).padStart(2, "0")}
+              </span>
+            </div>
+            {!compact && (
+              <p className="mt-1 line-clamp-2 text-[9px] leading-3 text-neutral-300">
                 {folder.description}
               </p>
-            </div>
+            )}
           </div>
+
+          <div
+            ref={flashRef}
+            className="pointer-events-none absolute inset-0 bg-white opacity-0"
+            aria-hidden="true"
+          />
         </div>
-      </motion.div>
+      </div>
+
+      {isLocked && (
+        <span className="folder-pinned absolute -bottom-6 left-0 z-40 font-mono text-[7px] tracking-[0.16em]">
+          PINNED
+        </span>
+      )}
     </div>
   );
 }
+
+const MemoizedStyleFolder = memo(StyleFolder);
+MemoizedStyleFolder.displayName = "StyleFolder";
+
+export default MemoizedStyleFolder;
