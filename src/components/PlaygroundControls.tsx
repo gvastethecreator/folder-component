@@ -907,8 +907,8 @@ export default function PlaygroundControls({
               <span className="switch-copy">
                 <IconGrain size={14} aria-hidden />
                 <span>
-                  SVG noise
-                  <small>Fine texture on the app background</small>
+                  Card SVG noise
+                  <small>Background grain stays on; this adds texture to folders</small>
                 </span>
               </span>
               <i aria-hidden="true">

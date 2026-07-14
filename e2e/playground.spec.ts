@@ -221,6 +221,13 @@ test.describe("playground controls", () => {
   test("applies tab, label, border, noise, and grid density controls", async ({ page }) => {
     await openPlayground(page);
     const folders = page.locator(folderSelector);
+    await expect
+      .poll(() =>
+        page
+          .locator(".app-shell")
+          .evaluate((element) => getComputedStyle(element, "::before").opacity),
+      )
+      .toBe("0.18");
 
     await page
       .getByRole("group", { name: "Tab alignment" })
@@ -233,11 +240,29 @@ test.describe("playground controls", () => {
 
     await setRange(page, "Border size", 3);
     await expect(folders.first()).toHaveCSS("--folder-border-width", "3px");
+    const firstTab = folders.first().locator(".folder-tab");
+    const firstTabContent = firstTab.locator(".folder-tab-content");
+    await expect(firstTab).toHaveCSS(
+      "clip-path",
+      "polygon(18% 0px, 100% 0px, 100% 100%, 0px 100%)",
+    );
+    await expect(firstTabContent).toHaveCSS("top", "3px");
+    await expect(firstTabContent).toHaveCSS("right", "3px");
+    await expect(firstTabContent).toHaveCSS("left", "3px");
+    await expect(firstTabContent).toHaveCSS("border-top-left-radius", "2px");
+    await expect(firstTabContent).toHaveCSS("border-top-right-radius", "5px");
+    await expect
+      .poll(() =>
+        firstTabContent.evaluate(
+          (element) => getComputedStyle(element, "::before").backgroundImage,
+        ),
+      )
+      .toContain("linear-gradient");
     await setRange(page, "Label opacity", 0.4);
     await setRange(page, "Backdrop blur", 16);
     await expect(folders.first().locator(".folder-label")).toHaveCSS(
       "background-color",
-      "rgba(10, 10, 10, 0.4)",
+      "rgba(10, 10, 11, 0.4)",
     );
     await setRange(page, "Shadow blur", 28);
     await setRange(page, "Shadow opacity", 0.36);
@@ -284,6 +309,12 @@ test.describe("playground controls", () => {
     await expect(firstLabel).toHaveCSS("bottom", "-3px");
     await expect(firstLabel).toHaveCSS("backdrop-filter", "none");
     await expect(firstFront.locator(":scope > img")).toHaveCSS("clip-path", "none");
+    await expect(firstTabContent).toHaveCSS("top", "0px");
+    await expect(firstTabContent).toHaveCSS("right", "0px");
+    await expect(firstTabContent).toHaveCSS("left", "0px");
+    await expect
+      .poll(() => firstFront.evaluate((element) => getComputedStyle(element, "::before").boxShadow))
+      .toContain("inset");
     await expect
       .poll(() =>
         firstLabel.evaluate((label) => label.parentElement?.classList.contains("folder-front")),
@@ -304,7 +335,10 @@ test.describe("playground controls", () => {
           .locator(".app-shell")
           .evaluate((element) => getComputedStyle(element, "::before").opacity),
       )
-      .toBe("0.75");
+      .toBe("0.3");
+    await expect
+      .poll(() => firstFront.evaluate((element) => getComputedStyle(element, "::after").opacity))
+      .toBe("0.54");
 
     await setRange(page, "Grid density", 96);
     await expect(page.locator("#folders-grid")).toHaveAttribute("data-grid-size", "96");
@@ -313,6 +347,14 @@ test.describe("playground controls", () => {
   test("covers code tab, theme switches, and reset", async ({ page }) => {
     await openPlayground(page);
     const app = page.locator(".app-shell");
+    const firstFolder = page.locator(folderSelector).first();
+    const firstLabel = firstFolder.locator(".folder-label");
+    const firstFileLabel = firstFolder.locator(".file-card-label").first();
+    await expect(firstLabel).toHaveCSS("background-color", "rgba(10, 10, 11, 0.9)");
+    await expect(firstLabel.locator(".folder-label-title")).toHaveCSS(
+      "color",
+      "rgb(245, 245, 244)",
+    );
 
     await page
       .getByRole("group", { name: "Engine" })
@@ -320,6 +362,9 @@ test.describe("playground controls", () => {
       .click();
     await page.getByRole("button", { name: "Light", exact: true }).click();
     await expect(app).toHaveAttribute("data-theme", "light");
+    await expect(firstLabel).toHaveCSS("background-color", "rgba(246, 245, 241, 0.9)");
+    await expect(firstLabel.locator(".folder-label-title")).toHaveCSS("color", "rgb(36, 35, 33)");
+    await expect(firstFileLabel).toHaveCSS("background-color", "rgba(247, 246, 242, 0.86)");
 
     await page.getByRole("tab", { name: "Code" }).click();
     const codePanel = page.getByRole("tabpanel", { name: "Code" });

@@ -24,7 +24,20 @@
   --scroll-track: #111111;
   --scroll-thumb: #4a4a4a;
   --scroll-thumb-hover: #666666;
-  --noise-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.94' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.025'/%3E%3C/svg%3E");
+  --ambient-noise-opacity: 0.18;
+  --noise-enabled-boost: 0.16;
+  --folder-label-rgb: 10 10 11;
+  --folder-label-text: #f5f5f4;
+  --folder-label-muted: #b8b8b4;
+  --folder-card-label-rgb: 9 9 10;
+  --folder-material-highlight: rgb(255 255 255 / 0.14);
+  --folder-material-shadow: rgb(0 0 0 / 0.42);
+  --folder-tab-highlight: rgb(255 255 255 / 0.2);
+  --folder-tab-shadow: rgb(0 0 0 / 0.28);
+  --folder-tab-base: #181818;
+  --folder-shadow-rgb: 0 0 0;
+  --folder-noise-blend: soft-light;
+  --noise-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.94' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.12'/%3E%3C/svg%3E");
 }
 
 .theme-light {
@@ -45,7 +58,20 @@
   --scroll-track: #eeeeee;
   --scroll-thumb: #a3a3a3;
   --scroll-thumb-hover: #737373;
-  --noise-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.94' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.018'/%3E%3C/svg%3E");
+  --ambient-noise-opacity: 0.14;
+  --noise-enabled-boost: 0.12;
+  --folder-label-rgb: 246 245 241;
+  --folder-label-text: #242321;
+  --folder-label-muted: #67635d;
+  --folder-card-label-rgb: 247 246 242;
+  --folder-material-highlight: rgb(255 255 255 / 0.72);
+  --folder-material-shadow: rgb(55 48 40 / 0.2);
+  --folder-tab-highlight: rgb(255 255 255 / 0.64);
+  --folder-tab-shadow: rgb(71 60 48 / 0.16);
+  --folder-tab-base: #e9e7e2;
+  --folder-shadow-rgb: 42 36 30;
+  --folder-noise-blend: multiply;
+  --noise-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.94' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.09'/%3E%3C/svg%3E");
 }
 
 html {
@@ -91,12 +117,12 @@ input[type="color"] {
   content: "";
   background-image: var(--noise-image);
   background-size: var(--noise-scale) var(--noise-scale);
-  opacity: 0;
+  opacity: var(--ambient-noise-opacity);
   pointer-events: none;
 }
 
 .app-shell[data-texture-enabled="true"]::before {
-  opacity: var(--noise-opacity);
+  opacity: calc(var(--ambient-noise-opacity) + var(--noise-opacity) * var(--noise-enabled-boost));
 }
 
 .controls-rail {
@@ -1043,9 +1069,11 @@ input[type="range"]::-moz-range-thumb:hover {
   ) !important;
   background: linear-gradient(
     145deg,
-    color-mix(in srgb, var(--folder-palette-deep) 34%, var(--surface-1)),
-    var(--surface-1)
+    color-mix(in srgb, var(--folder-palette-mid) 18%, var(--surface-2)) 0%,
+    color-mix(in srgb, var(--folder-palette-deep) 24%, var(--surface-1)) 62%,
+    var(--surface-1) 100%
   ) !important;
+  box-shadow: 0 14px 28px rgb(var(--folder-shadow-rgb) / 0.24);
 }
 
 .style-folder .file-card,
@@ -1060,6 +1088,7 @@ input[type="range"]::-moz-range-thumb:hover {
 
 .style-folder .folder-front {
   overflow: visible;
+  background-color: var(--surface-1) !important;
   clip-path: inset(0 round var(--folder-radius));
 }
 
@@ -1079,19 +1108,55 @@ input[type="range"]::-moz-range-thumb:hover {
 .style-folder .file-card {
   border-radius: var(--folder-inner-radius);
   box-shadow: 0 var(--folder-card-shadow-offset) var(--folder-card-shadow-blur)
-    rgb(0 0 0 / var(--folder-card-shadow-opacity));
+    rgb(var(--folder-shadow-rgb) / var(--folder-card-shadow-opacity));
 }
 
 .style-folder .folder-tab {
   top: calc(var(--folder-tab-height) * -1);
+  z-index: 4;
   width: var(--folder-tab-width);
   height: var(--folder-tab-height);
-  border-width: var(--folder-border-width) var(--folder-border-width) 0;
-  border-color: color-mix(
+  overflow: hidden;
+  isolation: isolate;
+  background-color: color-mix(
     in srgb,
     var(--folder-palette-accent) var(--folder-border-opacity),
     transparent
   );
+}
+
+.style-folder .folder-tab-content {
+  top: var(--folder-border-width);
+  right: var(--folder-border-width);
+  bottom: 0;
+  left: var(--folder-border-width);
+  overflow: hidden;
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--folder-palette-accent) 26%, var(--folder-tab-base)),
+    var(--folder-tab-base)
+  );
+}
+
+.style-folder .folder-tab-content > * {
+  position: relative;
+  z-index: 0;
+}
+
+.style-folder .folder-tab-content::before {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  content: "";
+  background:
+    linear-gradient(150deg, var(--folder-tab-highlight), transparent 42%),
+    linear-gradient(330deg, var(--folder-tab-shadow), transparent 58%),
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--folder-palette-accent) 16%, transparent),
+      transparent 62%
+    );
+  pointer-events: none;
 }
 
 .style-folder[data-tab-alignment="left"] .folder-tab {
@@ -1101,11 +1166,80 @@ input[type="range"]::-moz-range-thumb:hover {
   clip-path: polygon(0 0, 82% 0, 100% 100%, 0 100%);
 }
 
+.style-folder[data-tab-alignment="left"] .folder-tab-content {
+  border-radius: max(0px, calc(min(8px, var(--folder-radius)) - var(--folder-border-width)))
+    max(0px, calc(min(5px, var(--folder-radius)) - var(--folder-border-width))) 0 0;
+  clip-path: polygon(0 0, 82% 0, 100% 100%, 0 100%);
+}
+
 .style-folder[data-tab-alignment="right"] .folder-tab {
   right: 0;
   left: auto;
   border-radius: min(5px, var(--folder-radius)) min(8px, var(--folder-radius)) 0 0;
   clip-path: polygon(18% 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.style-folder[data-tab-alignment="right"] .folder-tab-content {
+  border-radius: max(0px, calc(min(5px, var(--folder-radius)) - var(--folder-border-width)))
+    max(0px, calc(min(8px, var(--folder-radius)) - var(--folder-border-width))) 0 0;
+  clip-path: polygon(18% 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.style-folder .folder-front::before,
+.style-folder .folder-back::before,
+.style-folder .file-card::before {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  border-radius: inherit;
+  content: "";
+  box-shadow:
+    inset 0 1px 0 var(--folder-material-highlight),
+    inset 1px 0 0 color-mix(in srgb, var(--folder-material-highlight) 68%, transparent),
+    inset 0 -12px 22px var(--folder-material-shadow);
+  pointer-events: none;
+}
+
+.style-folder[data-texture-enabled="true"] .folder-front::after,
+.style-folder[data-texture-enabled="true"] .folder-back::after,
+.style-folder[data-texture-enabled="true"] .file-card::after,
+.style-folder[data-texture-enabled="true"] .folder-tab-content::after {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  border-radius: inherit;
+  content: "";
+  background-image: var(--noise-image);
+  background-size: var(--noise-scale) var(--noise-scale);
+  mix-blend-mode: var(--folder-noise-blend);
+  opacity: calc(var(--noise-opacity) * 0.72);
+  pointer-events: none;
+}
+
+.style-folder .folder-front > :is(img, [data-image-state]),
+.style-folder .file-card > :is(img, [data-image-state]) {
+  position: relative;
+  z-index: 0;
+}
+
+.style-folder .folder-back-meta,
+.style-folder .file-card-label,
+.style-folder .folder-label {
+  z-index: 3;
+}
+
+.style-folder .folder-back-meta {
+  color: var(--folder-label-muted) !important;
+}
+
+.style-folder .file-card-label {
+  border-color: color-mix(in srgb, var(--folder-material-highlight) 62%, transparent) !important;
+  background-color: rgb(var(--folder-card-label-rgb) / 0.86) !important;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--folder-material-highlight) 72%, transparent);
+}
+
+.style-folder .file-card-label span {
+  color: var(--folder-label-muted) !important;
 }
 
 .style-folder .folder-label {
@@ -1123,7 +1257,23 @@ input[type="range"]::-moz-range-thumb:hover {
     var(--folder-palette-accent) var(--folder-border-opacity),
     transparent
   );
-  box-shadow: inset 0 1px color-mix(in srgb, var(--folder-palette-accent) 18%, transparent);
+  color: var(--folder-label-text);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--folder-material-highlight) 76%, transparent),
+    inset 0 8px 18px color-mix(in srgb, var(--folder-material-shadow) 26%, transparent);
+}
+
+.style-folder .folder-label-title {
+  color: var(--folder-label-text) !important;
+}
+
+.style-folder .folder-label-count,
+.style-folder .folder-label-description {
+  color: var(--folder-label-muted) !important;
+}
+
+.style-folder .folder-flash {
+  z-index: 4;
 }
 
 @media (prefers-reduced-motion: reduce) {
