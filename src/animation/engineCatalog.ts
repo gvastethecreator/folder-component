@@ -1,5 +1,6 @@
 import type { AnimationEngine, PlaygroundConfig } from "../types";
 import { FOLDER_PALETTES } from "../config/playgroundCatalog";
+import { getGsapEase, getMotionDuration, getNativeEase, getSpringProfile } from "./animationTiming";
 
 export type SpringCapability = "native" | "approximation";
 
@@ -76,16 +77,20 @@ function standaloneEngineImport(engine: AnimationEngine) {
   return "";
 }
 
-function standaloneEngineAdapter(engine: AnimationEngine) {
+function standaloneEngineAdapter(config: PlaygroundConfig) {
+  const engine = config.animationEngine;
+  const springProfile = getSpringProfile(config.transitionCurve, config.springSettings);
+
   if (engine === "gsap") {
     return `function animateFolder(root, open, immediate = false) {
   const duration = immediate ? 0 : motionDuration;
-  root.querySelectorAll(".demo-file").forEach((card, index) => {
+  const cards = [...root.querySelectorAll(".demo-file")];
+  cards.forEach((card, index) => {
     gsap.to(card, {
       transform: open ? card.dataset.openTransform : card.dataset.closedTransform,
       duration,
-      delay: immediate ? 0 : index * config.staggerDelay,
-      ease: ${quote("back.out(0.8)")},
+      delay: immediate ? 0 : orderedDelay(index, cards.length, open),
+      ease: ${quote(getGsapEase(config.transitionCurve, config.springSettings))},
       overwrite: "auto",
     });
   });
@@ -106,15 +111,16 @@ function standaloneEngineAdapter(engine: AnimationEngine) {
       ? { duration: motionDuration, ease: [0.16, 1, 0.3, 1] }
       : {
           type: "spring",
-          stiffness: config.springSettings.stiffness,
-          damping: config.springSettings.damping,
-          mass: config.springSettings.mass,
+          stiffness: ${springProfile.stiffness},
+          damping: ${springProfile.damping},
+          mass: ${springProfile.mass},
         };
-  root.querySelectorAll(".demo-file").forEach((card, index) => {
+  const cards = [...root.querySelectorAll(".demo-file")];
+  cards.forEach((card, index) => {
     animate(
       card,
       { transform: open ? card.dataset.openTransform : card.dataset.closedTransform },
-      { ...transition, delay: immediate ? 0 : index * config.staggerDelay },
+      { ...transition, delay: immediate ? 0 : orderedDelay(index, cards.length, open) },
     );
   });
   animate(root.querySelector(".demo-front"), { transform: coverTransform(open) }, transition);
@@ -127,15 +133,16 @@ function standaloneEngineAdapter(engine: AnimationEngine) {
     config.transitionCurve === "tween"
       ? "out(4)"
       : spring({
-          stiffness: config.springSettings.stiffness,
-          damping: config.springSettings.damping,
-          mass: config.springSettings.mass,
+          stiffness: ${springProfile.stiffness},
+          damping: ${springProfile.damping},
+          mass: ${springProfile.mass},
         });
-  root.querySelectorAll(".demo-file").forEach((card, index) => {
+  const cards = [...root.querySelectorAll(".demo-file")];
+  cards.forEach((card, index) => {
     animate(card, {
       transform: open ? card.dataset.openTransform : card.dataset.closedTransform,
       duration: immediate ? 0 : motionDuration * 1000,
-      delay: immediate ? 0 : index * config.staggerDelay * 1000,
+      delay: immediate ? 0 : orderedDelay(index, cards.length, open) * 1000,
       ease,
     });
   });
@@ -149,24 +156,26 @@ function standaloneEngineAdapter(engine: AnimationEngine) {
 
   if (engine === "waapi") {
     return `function animateElement(element, transform, delay = 0, immediate = false) {
+  if (!element?.animate) return;
   element.getAnimations().forEach((animation) => animation.cancel());
   element.animate(
     [{ transform: getComputedStyle(element).transform }, { transform }],
     {
       duration: immediate ? 0 : motionDuration * 1000,
       delay: immediate ? 0 : delay * 1000,
-      easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+      easing: ${quote(getNativeEase(config.transitionCurve, config.springSettings))},
       fill: "forwards",
     },
   );
 }
 
 function animateFolder(root, open, immediate = false) {
-  root.querySelectorAll(".demo-file").forEach((card, index) => {
+  const cards = [...root.querySelectorAll(".demo-file")];
+  cards.forEach((card, index) => {
     animateElement(
       card,
       open ? card.dataset.openTransform : card.dataset.closedTransform,
-      index * config.staggerDelay,
+      orderedDelay(index, cards.length, open),
       immediate,
     );
   });
@@ -186,12 +195,8 @@ function standaloneStyles(config: PlaygroundConfig, palette: readonly string[]) 
   const width = config.folderShape === "horizontal" ? "180px" : `${config.gridItemSize}px`;
   const aspect =
     config.folderShape === "vertical" ? "9 / 13" : config.folderShape === "square" ? "1" : "7 / 5";
-  const cssEase =
-    config.transitionCurve === "bounce"
-      ? "cubic-bezier(.2, 1.45, .45, 1)"
-      : config.transitionCurve === "elastic"
-        ? "cubic-bezier(.2, 1.7, .35, 1)"
-        : "cubic-bezier(.16, 1, .3, 1)";
+  const cssEase = getNativeEase(config.transitionCurve, config.springSettings);
+  const motionDuration = getMotionDuration(config.transitionCurve, config.springSettings);
 
   return `.standalone-folders {
   --accent: ${palette[0]};
@@ -242,7 +247,9 @@ function standaloneStyles(config: PlaygroundConfig, palette: readonly string[]) 
   top: -${config.tabHeight}px;
   width: ${config.tabWidth}%;
   height: ${config.tabHeight}px;
-  background: ${config.tabFill === "color" ? config.tabColor : "linear-gradient(135deg, var(--accent), var(--mid))"};
+  background: ${config.tabFill === "color" ? config.tabColor : "var(--cover-art)"};
+  background-size: cover;
+  background-position: top center;
   border-radius: ${Math.min(config.folderRadius, 8)}px ${Math.min(config.folderRadius, 8)}px 0 0;
 }
 .demo-file {
@@ -288,10 +295,13 @@ function standaloneStyles(config: PlaygroundConfig, palette: readonly string[]) 
 }
 .standalone-folders[data-engine="css"] .demo-file,
 .standalone-folders[data-engine="css"] .demo-front {
-  transition: transform ${config.transitionCurve === "elastic" ? 0.72 : 0.48}s ${cssEase};
+  transition: transform ${motionDuration}s ${cssEase};
 }
 .standalone-folders[data-engine="css"] .demo-file {
   transition-delay: calc(var(--index) * ${config.staggerDelay}s);
+}
+.standalone-folders[data-engine="css"] .demo-folder[data-open="false"] .demo-file {
+  transition-delay: calc(var(--reverse-index) * ${config.staggerDelay}s);
 }
 .standalone-folders[data-engine="css"] .demo-folder[data-open="true"] .demo-file {
   transform: var(--open-transform);
@@ -326,7 +336,7 @@ export function buildPlaygroundSnippet(config: PlaygroundConfig): string {
   const palette = FOLDER_PALETTES[config.paletteId].colors;
   const styles = standaloneStyles(config, palette);
   const engineImport = standaloneEngineImport(config.animationEngine);
-  const engineAdapter = standaloneEngineAdapter(config.animationEngine);
+  const engineAdapter = standaloneEngineAdapter(config);
   const demoFolders = [
     {
       id: "signal",
@@ -355,7 +365,7 @@ const deploymentStyles = [
   "fan", "skew3d", "cascade", "scatter", "horizontal_stack",
   "orbit", "staircase", "burst", "deck_split",
 ];
-const motionDuration = config.transitionCurve === "elastic" ? 0.72 : config.transitionCurve === "bounce" ? 0.58 : 0.48;
+const motionDuration = ${getMotionDuration(config.transitionCurve, config.springSettings)};
 
 function stableDeployment(key) {
   let hash = 2166136261;
@@ -405,6 +415,10 @@ function coverTransform(open) {
     : "translateY(0) rotateX(0deg) scale(1)";
 }
 
+function orderedDelay(index, count, open) {
+  return (open ? index : count - index - 1) * config.staggerDelay;
+}
+
 ${engineAdapter}
 
 function DemoFolder({ folder }) {
@@ -412,6 +426,9 @@ function DemoFolder({ folder }) {
   const lockedRef = useRef(false);
   const style = config.deploymentMode === "random" ? stableDeployment(folder.id) : config.deploymentMode;
   const files = Array.from({ length: config.visibleCardsCount }, (_, index) => index);
+  const coverArt = config.visualSource === "image"
+    ? folder.artwork
+    : "linear-gradient(145deg, " + palette[0] + ", " + palette[2] + " 72%)";
 
   const setOpen = (open) => {
     const root = rootRef.current;
@@ -429,7 +446,9 @@ function DemoFolder({ folder }) {
       setOpen(lockedRef.current);
       return;
     }
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const target = config.clickBehavior === "flash" ? root.querySelector(".demo-flash") : root;
+    if (!target?.animate) return;
     const frames = config.clickBehavior === "flash"
       ? [{ opacity: 0.28 }, { opacity: 0 }]
       : [{ transform: "scale(.975)" }, { transform: "scale(1)" }];
@@ -444,6 +463,7 @@ function DemoFolder({ folder }) {
       data-open="false"
       aria-expanded="false"
       aria-label={folder.title}
+      style={{ "--cover-art": coverArt }}
       onPointerEnter={() => setOpen(true)}
       onPointerLeave={() => !lockedRef.current && setOpen(false)}
       onFocus={() => setOpen(true)}
@@ -469,6 +489,7 @@ function DemoFolder({ folder }) {
             data-closed-transform={closedTransform}
             style={{
               "--index": fileIndex,
+              "--reverse-index": files.length - fileIndex - 1,
               "--open-transform": openTransform,
               "--closed-transform": closedTransform,
               "--file-art": art,
@@ -476,7 +497,7 @@ function DemoFolder({ folder }) {
           />
         );
       })}
-      <span className="demo-front" style={{ "--cover-art": folder.artwork }}>
+      <span className="demo-front">
         {config.labelVisible && <span className="demo-label">{folder.title}</span>}
       </span>
       <span className="demo-flash" />

@@ -5,6 +5,7 @@ import { animate as animeAnimate, spring as animeSpring } from "animejs";
 import type { JSAnimation } from "animejs";
 import type { AnimationEngine, SpringSettings, TransitionCurve } from "../types";
 import type { CardTransform } from "./folderGeometry";
+import { getGsapEase, getNativeEase, getSpringProfile } from "./animationTiming";
 
 export interface FolderEngineController {
   setOpen: (open: boolean, immediate?: boolean) => void;
@@ -111,14 +112,6 @@ function stabilizeFeedbackSeam(
   };
 }
 
-function nativeEase(options: FolderEngineOptions) {
-  if (options.transitionCurve === "tween") return "cubic-bezier(0.16, 1, 0.3, 1)";
-  if (options.transitionCurve === "bounce") return "cubic-bezier(0.34, 1.56, 0.64, 1)";
-  if (options.transitionCurve === "elastic") return "cubic-bezier(0.18, 1.8, 0.35, 1)";
-  const overshoot = Math.min(0.42, Math.max(0.08, 0.48 - options.springSettings.damping / 70));
-  return `cubic-bezier(0.2, ${1 + overshoot}, 0.3, 1)`;
-}
-
 function createCssController(options: FolderEngineOptions): FolderEngineController {
   const targets = [...options.cards, options.front];
   let completionTimer: ReturnType<typeof setTimeout> | null = null;
@@ -132,7 +125,10 @@ function createCssController(options: FolderEngineOptions): FolderEngineControll
   const configureTransition = (target: HTMLElement, delay: number) => {
     target.style.transitionProperty = "transform";
     target.style.transitionDuration = `${options.duration}s`;
-    target.style.transitionTimingFunction = nativeEase(options);
+    target.style.transitionTimingFunction = getNativeEase(
+      options.transitionCurve,
+      options.springSettings,
+    );
     target.style.transitionDelay = `${delay}s`;
   };
 
@@ -275,7 +271,7 @@ function createWaapiController(options: FolderEngineOptions): FolderEngineContro
             index < options.cards.length
               ? orderedDelay(index, options.cards.length, open, options.staggerDelay) * 1000
               : 0,
-          easing: nativeEase(options),
+          easing: getNativeEase(options.transitionCurve, options.springSettings),
           fill: "forwards",
         },
       );
@@ -362,15 +358,7 @@ function createGsapController(options: FolderEngineOptions): FolderEngineControl
     }
 
     const transforms = open ? options.expanded : options.collapsed;
-    const overshoot = gsap.utils.clamp(0.15, 1.15, 1.35 - options.springSettings.damping / 18);
-    const ease =
-      options.transitionCurve === "spring"
-        ? `back.out(${overshoot})`
-        : options.transitionCurve === "bounce"
-          ? "bounce.out"
-          : options.transitionCurve === "elastic"
-            ? "elastic.out(1, 0.35)"
-            : "power4.out";
+    const ease = getGsapEase(options.transitionCurve, options.springSettings);
     setLayers(targets, true);
 
     activeTimeline = gsap.timeline({
@@ -443,12 +431,7 @@ function createMotionController(options: FolderEngineOptions): FolderEngineContr
 
     const transforms = open ? options.expanded : options.collapsed;
     setLayers(targets, true);
-    const springProfile =
-      options.transitionCurve === "bounce"
-        ? { stiffness: 260, damping: 9, mass: 0.8 }
-        : options.transitionCurve === "elastic"
-          ? { stiffness: 180, damping: 7, mass: 0.9 }
-          : options.springSettings;
+    const springProfile = getSpringProfile(options.transitionCurve, options.springSettings);
     const transition =
       options.transitionCurve === "tween"
         ? {
@@ -547,12 +530,7 @@ function createAnimeController(options: FolderEngineOptions): FolderEngineContro
     }
 
     const transforms = open ? options.expanded : options.collapsed;
-    const springProfile =
-      options.transitionCurve === "bounce"
-        ? { stiffness: 260, damping: 9, mass: 0.8 }
-        : options.transitionCurve === "elastic"
-          ? { stiffness: 180, damping: 7, mass: 0.9 }
-          : options.springSettings;
+    const springProfile = getSpringProfile(options.transitionCurve, options.springSettings);
     const ease =
       options.transitionCurve === "tween"
         ? "out(4)"

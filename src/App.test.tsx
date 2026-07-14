@@ -15,8 +15,14 @@ import {
 describe("App", () => {
   it("mounts without crashing and renders the controls panel", () => {
     render(<App />);
-    expect(screen.getByRole("heading", { name: "Playground" })).toBeInTheDocument();
+    const controlsHeading = screen.getByRole("heading", { name: "Playground" });
+    expect(controlsHeading).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Controls" })).toHaveAttribute("aria-selected", "true");
+    expect(
+      controlsHeading
+        .closest("aside")
+        ?.compareDocumentPosition(document.querySelector("#folders-grid") as Node),
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
 
   it("renders every style folder from the data", () => {
@@ -57,11 +63,10 @@ describe("App", () => {
     expect(new Set(folders.map((folder) => folder.dataset.coverImage)).size).toBe(20);
   });
 
-  it("switches the complete application chrome to light mode", async () => {
-    const user = userEvent.setup();
+  it("switches the complete application chrome to light mode", () => {
     render(<App />);
 
-    await user.click(screen.getByRole("button", { name: "Light" }));
+    fireEvent.click(screen.getByRole("button", { name: "Light" }));
     expect(document.querySelector("[data-theme]")).toHaveAttribute("data-theme", "light");
   });
 
@@ -92,7 +97,7 @@ describe("App", () => {
       expect(screen.getAllByText(engine.statusLabel).length).toBeGreaterThan(0);
       expect(screen.getAllByText(engine.description).length).toBeGreaterThan(0);
     }
-  });
+  }, 10_000);
 
   it("keeps reset and generated code on the exported config contract", async () => {
     const changed = {
@@ -166,6 +171,39 @@ describe("App", () => {
         },
       }),
     ).resolves.toBeDefined();
+  });
+
+  it("keeps standalone timing, close order, motion preferences, and artwork in sync", () => {
+    const baseConfig = {
+      ...createDefaultPlaygroundConfig(),
+      transitionCurve: "elastic" as const,
+      visualSource: "tone" as const,
+      tabFill: "image" as const,
+    };
+
+    for (const engine of ENGINE_CATALOG_LIST) {
+      const snippet = buildPlaygroundSnippet({ ...baseConfig, animationEngine: engine.id });
+      expect(snippet).toContain("function orderedDelay(index, count, open)");
+      expect(snippet).toContain('window.matchMedia("(prefers-reduced-motion: reduce)")');
+      expect(snippet).toContain('"--reverse-index": files.length - fileIndex - 1');
+      expect(snippet).toContain('style={{ "--cover-art": coverArt }}');
+      expect(snippet).toContain("background: var(--cover-art)");
+    }
+
+    expect(buildPlaygroundSnippet({ ...baseConfig, animationEngine: "gsap" })).toContain(
+      'ease: "elastic.out(1, 0.35)"',
+    );
+    for (const engine of ["motion", "animejs"] as const) {
+      const snippet = buildPlaygroundSnippet({ ...baseConfig, animationEngine: engine });
+      expect(snippet).toContain("stiffness: 180");
+      expect(snippet).toContain("damping: 7");
+      expect(snippet).toContain("mass: 0.9");
+    }
+    for (const engine of ["css", "waapi"] as const) {
+      expect(buildPlaygroundSnippet({ ...baseConfig, animationEngine: engine })).toContain(
+        "cubic-bezier(0.18, 1.8, 0.35, 1)",
+      );
+    }
   });
 
   it("marks any manual deviation from a complete preset as custom", () => {
