@@ -14,6 +14,9 @@ The live playground is a GitHub Project Page at:
 4. uploads `dist/` as a Pages artifact;
 5. deploys through the `github-pages` environment.
 
+Third-party Actions are pinned to full commit SHAs. The release tag is kept as an inline comment
+so updates remain reviewable without relying on mutable major-version tags.
+
 GitHub Pages must use **GitHub Actions** as its publishing source. No `gh-pages` branch is
 required.
 
