@@ -368,23 +368,30 @@ function stableDeployment(key) {
 
 function layoutFor(style, index, total) {
   const center = (total - 1) / 2;
-  const offset = (index - center) * config.spacingMultiplier;
+  const offset = index - center;
   const direction = config.fanDirection === "left" ? -1 : config.fanDirection === "right" ? 1 : 0;
-  let x = offset * 28 + direction * index * 8;
+  let x = offset * 28;
   let y = -18 - Math.abs(offset) * 7;
   let rotation = offset * config.fanAngle;
   let scale = 1;
 
-  if (style === "skew3d") { x *= 0.75; y -= index * 9; rotation += index * 3; scale -= index * 0.025; }
-  if (style === "cascade") { x = index * 18 - center * 18; y = -index * 13; rotation = 0; }
-  if (style === "scatter") { x = ((index * 37) % 90) - 45; y = -22 - ((index * 29) % 58); rotation = ((index * 17) % 24) - 12; }
-  if (style === "horizontal_stack") { x = offset * 38; y = -22; rotation = 0; }
-  if (style === "orbit") { const angle = (index / Math.max(total, 1)) * Math.PI * 2; x = Math.cos(angle) * 58; y = Math.sin(angle) * 30 - 38; rotation = angle * 8; }
-  if (style === "staircase") { x = offset * 26; y = -18 - index * 14; rotation = 0; }
-  if (style === "burst") { x = offset * 44; y = -28 - Math.abs(offset) * 16; rotation = offset * 10; }
-  if (style === "deck_split") { x = (index < total / 2 ? -1 : 1) * (22 + index * 9); y = -24 - (index % 2) * 16; rotation = (index < total / 2 ? -1 : 1) * 7; }
+  if (style === "skew3d") { x *= 0.75; y -= index * 9; rotation = offset * config.fanAngle * 0.58; scale -= index * 0.025; }
+  if (style === "cascade") { x = offset * 18; y = -(index + 1) * 13; rotation = offset * config.fanAngle * 0.18; }
+  if (style === "scatter") { x = ((index * 37) % 90) - 45; y = -22 - ((index * 29) % 58); rotation = (((index * 17) % 24) - 12) * (config.fanAngle / 6); }
+  if (style === "horizontal_stack") { x = offset * 38; y = -22; rotation = (index % 2 === 0 ? 1 : -1) * (config.fanAngle / 3.5); }
+  if (style === "orbit") { const angle = (index / Math.max(total - 1, 1)) * Math.PI; x = Math.cos(angle) * 58; y = Math.sin(angle) * -30 - 38; rotation = offset * config.fanAngle * 0.72; }
+  if (style === "staircase") { x = offset * 26; y = -18 - index * 14; rotation = offset * config.fanAngle * 0.25; }
+  if (style === "burst") { x = offset * 44; y = -28 - Math.abs(offset) * 16; rotation = offset * config.fanAngle; }
+  if (style === "deck_split") { const side = index % 2 === 0 ? -1 : 1; x = side * (31 + Math.floor(index / 2) * 12); y = -24 - Math.floor(index / 2) * 16; rotation = side * config.fanAngle * (0.5 + Math.floor(index / 2) * 0.12); }
+  if (total === 1 && rotation === 0) rotation = config.fanAngle * 0.18;
 
-  if (config.orientation === "horizontal") [x, y] = [y, x];
+  x *= config.spacingMultiplier;
+  y *= config.spacingMultiplier;
+  if (config.orientation === "horizontal") [x, y] = [-y, x];
+  if (direction !== 0) {
+    x += direction * (34 + index * 5) * config.spacingMultiplier;
+    rotation += direction * config.fanAngle * 0.15;
+  }
   return { x, y, rotation, scale };
 }
 

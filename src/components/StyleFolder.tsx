@@ -4,10 +4,10 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import {
   createFolderEngineController,
-  type CardTransform,
   type FolderEngineController,
   type FolderEngineOptions,
 } from "../animation/folderEngines";
+import { getCollapsedTransforms, getExpandedTransforms } from "../animation/folderGeometry";
 import ImageWithFallback, { neutralTone } from "./ImageWithFallback";
 import { FOLDER_PALETTES } from "../config/playgroundCatalog";
 import type {
@@ -73,133 +73,6 @@ interface StyleFolderProps {
 
 const clamp = (minimum: number, maximum: number, value: number) =>
   Math.min(maximum, Math.max(minimum, value));
-
-function collapsedTransform(
-  index: number,
-  count: number,
-  fanDirection: StyleFolderProps["fanDirection"],
-  deploymentStyle: DeploymentStyle,
-  layoutScale: number,
-): CardTransform {
-  let rotation = 0;
-
-  if (deploymentStyle !== "cascade" && deploymentStyle !== "horizontal_stack") {
-    if (fanDirection === "symmetrical") {
-      rotation = (index - (count - 1) / 2) * 1.25;
-    } else if (fanDirection === "left") {
-      rotation = (index - count) * 0.8;
-    } else {
-      rotation = (index + 1) * 0.8;
-    }
-  }
-
-  return {
-    x: 0,
-    y: index * -4 * layoutScale,
-    rotation,
-    scale: 0.95 + index * 0.015,
-  };
-}
-
-function expandedTransform(
-  index: number,
-  count: number,
-  {
-    deploymentStyle,
-    fanDirection,
-    fanAngle,
-    orientation,
-    spacingMultiplier,
-    layoutScale,
-  }: Pick<
-    StyleFolderProps,
-    "deploymentStyle" | "fanDirection" | "fanAngle" | "orientation" | "spacingMultiplier"
-  > & { layoutScale: number },
-): CardTransform {
-  let x = 0;
-  let y = 0;
-  let rotation = 0;
-  let scale = 1;
-
-  if (deploymentStyle === "skew3d") {
-    rotation = (index - (count - 1) / 2) * 3.5;
-    y = -38 * layoutScale * spacingMultiplier * (count - index);
-    x = (index - (count - 1) / 2) * 25 * layoutScale * spacingMultiplier;
-    scale = 0.96 + index * 0.02;
-  } else if (deploymentStyle === "cascade") {
-    x = (index + 1) * 32 * layoutScale * spacingMultiplier;
-    y = -(index + 1) * 31 * layoutScale * spacingMultiplier;
-  } else if (deploymentStyle === "horizontal_stack") {
-    const direction = fanDirection === "left" ? -1 : 1;
-    x = (index + 1) * 32 * layoutScale * spacingMultiplier * direction;
-    y = -14 * layoutScale * spacingMultiplier;
-    rotation = (index % 2 === 0 ? 1 : -1) * (fanAngle / 3.5);
-  } else if (deploymentStyle === "scatter") {
-    const scatterX = [-42, 46, -16, 34, -28];
-    const scatterY = [-68, -82, -94, -72, -86];
-    const scatterRotation = [-8, 10, -5, 7, -7];
-    x = scatterX[index % scatterX.length] * layoutScale * spacingMultiplier;
-    y = scatterY[index % scatterY.length] * layoutScale * spacingMultiplier;
-    rotation = scatterRotation[index % scatterRotation.length] * (fanAngle / 6);
-  } else if (deploymentStyle === "orbit") {
-    const progress = count <= 1 ? 0.5 : index / (count - 1);
-    const angle = Math.PI + progress * Math.PI;
-    x = Math.cos(angle) * 70 * layoutScale * spacingMultiplier;
-    y = (Math.sin(angle) * 76 - 24) * layoutScale * spacingMultiplier;
-    rotation = (progress - 0.5) * fanAngle * 2.2;
-    scale = 0.96 + Math.sin(progress * Math.PI) * 0.04;
-  } else if (deploymentStyle === "staircase") {
-    const centeredIndex = index - (count - 1) / 2;
-    x = centeredIndex * 46 * layoutScale * spacingMultiplier;
-    y = -(index + 1) * 29 * layoutScale * spacingMultiplier;
-    rotation = centeredIndex * (fanAngle / 4);
-    scale = 0.97 + index * 0.008;
-  } else if (deploymentStyle === "burst") {
-    const burstX = [-62, -32, 0, 32, 62];
-    const burstY = [-54, -84, -104, -84, -54];
-    const burstRotation = [-12, -6, 0, 6, 12];
-    const slot = index % burstX.length;
-    x = burstX[slot] * layoutScale * spacingMultiplier;
-    y = burstY[slot] * layoutScale * spacingMultiplier;
-    rotation = burstRotation[slot] * (fanAngle / 6);
-    scale = slot === 2 ? 1 : 0.97;
-  } else if (deploymentStyle === "deck_split") {
-    const level = Math.floor(index / 2) + 1;
-    const direction = index % 2 === 0 ? -1 : 1;
-    x = direction * (34 + level * 20) * layoutScale * spacingMultiplier;
-    y = -(32 + level * 31) * layoutScale * spacingMultiplier;
-    rotation = direction * (fanAngle / 2 + level * 1.5);
-    scale = 1 - level * 0.012;
-  } else {
-    if (fanDirection === "symmetrical") {
-      rotation = (index - (count - 1) / 2) * fanAngle;
-    } else if (fanDirection === "left") {
-      rotation = (index - count) * fanAngle * 0.75;
-    } else {
-      rotation = (index + 1) * fanAngle * 0.75;
-    }
-
-    if (orientation === "vertical") {
-      y = -(count - index) * 43 * layoutScale * spacingMultiplier;
-      if (fanDirection === "left") {
-        x = (index - count) * 10 * layoutScale * spacingMultiplier;
-      } else if (fanDirection === "right") {
-        x = (index + 1) * 10 * layoutScale * spacingMultiplier;
-      }
-    } else if (fanDirection === "symmetrical") {
-      const middle = (count - 1) / 2;
-      x = (index - middle) * 50 * layoutScale * spacingMultiplier;
-      y = (Math.abs(index - middle) * 7 - 14) * layoutScale;
-    } else {
-      const direction = fanDirection === "left" ? -1 : 1;
-      const order = fanDirection === "left" ? count - index : index + 1;
-      x = order * 35 * layoutScale * spacingMultiplier * direction;
-      y = (index - 1) * -4 * layoutScale;
-    }
-  }
-
-  return { x, y, rotation, scale };
-}
 
 function useReducedMotionPreference() {
   const [reducedMotion, setReducedMotion] = useState(false);
@@ -304,19 +177,15 @@ function StyleFolder({
       cards,
       front,
       flash: flashRef.current,
-      collapsed: cards.map((_, index) =>
-        collapsedTransform(index, cards.length, fanDirection, deploymentStyle, layoutScale),
-      ),
-      expanded: cards.map((_, index) =>
-        expandedTransform(index, cards.length, {
-          deploymentStyle,
-          fanDirection,
-          fanAngle,
-          orientation,
-          spacingMultiplier,
-          layoutScale,
-        }),
-      ),
+      collapsed: getCollapsedTransforms(cards.length, fanDirection, deploymentStyle, layoutScale),
+      expanded: getExpandedTransforms(cards.length, {
+        deploymentStyle,
+        fanDirection,
+        fanAngle,
+        orientation,
+        spacingMultiplier,
+        layoutScale,
+      }),
       frontOpen: {
         y: clamp(2, 7, Math.abs(coverTilt) / 4),
         scale: clamp(0.95, 0.99, 1 - Math.abs(coverTilt) / 800),
