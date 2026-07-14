@@ -40,9 +40,21 @@ async function setRange(page: Page, name: string, value: number) {
   }, value);
 }
 
+async function openControlSection(page: Page, title: string) {
+  const section = page
+    .locator(".control-section")
+    .filter({ has: page.locator(".control-section-title", { hasText: title }) });
+  await expect(section).toHaveCount(1);
+  if (!(await section.evaluate((element) => (element as HTMLDetailsElement).open))) {
+    await section.locator("summary").click();
+  }
+  await expect(section).toHaveAttribute("open", "");
+}
+
 test.describe("animation engines and interaction", () => {
   test("switches all five engine labels and folder markers", async ({ page }) => {
     await openPlayground(page);
+    await openControlSection(page, "Animation & interaction");
     const engineGroup = page.getByRole("group", { name: "Engine" });
     const folders = page.locator(folderSelector);
     await expect(folders).toHaveCount(20);
@@ -97,6 +109,7 @@ test.describe("animation engines and interaction", () => {
     const page = await context.newPage();
     try {
       await openPlayground(page);
+      await openControlSection(page, "Animation & interaction");
       const folder = page.locator(folderSelector).first();
       await page
         .getByRole("group", { name: "Click" })
@@ -113,6 +126,7 @@ test.describe("animation engines and interaction", () => {
     page,
   }) => {
     await openPlayground(page);
+    await openControlSection(page, "Animation & interaction");
     const folder = page.locator(folderSelector).first();
     const engineGroup = page.getByRole("group", { name: "Engine" });
 
@@ -149,6 +163,7 @@ test.describe("playground controls", () => {
     page.on("pageerror", (error) => pageErrors.push(error.message));
 
     await openPlayground(page);
+    await openControlSection(page, "Surface & label");
     const folder = page.locator(folderSelector).first();
     const front = folder.locator(".folder-front");
     const label = folder.locator(".folder-label");
@@ -183,6 +198,9 @@ test.describe("playground controls", () => {
     page,
   }) => {
     await openPlayground(page);
+    await openControlSection(page, "Surface & label");
+    await openControlSection(page, "Folder design");
+    await openControlSection(page, "Animation & interaction");
     const folders = page.locator(folderSelector);
     await expect(page.getByRole("slider", { name: "Border size" })).toHaveValue("0");
     await expect(folders.first()).toHaveCSS("--folder-border-width", "0px");
@@ -208,10 +226,6 @@ test.describe("playground controls", () => {
     await expect(page.locator('[data-deployment="orbit"]')).toHaveCount(20);
     await expect(page.getByLabel("Design & behavior preset")).toHaveValue("custom");
 
-    await page
-      .locator("summary")
-      .filter({ hasText: /^Motion$/ })
-      .click();
     await expect(
       page.getByRole("group", { name: "Curve" }).getByRole("button", { name: "Elastic" }),
     ).toHaveAttribute("aria-pressed", "true");
@@ -220,6 +234,8 @@ test.describe("playground controls", () => {
 
   test("applies tab, label, border, noise, and grid density controls", async ({ page }) => {
     await openPlayground(page);
+    await openControlSection(page, "Folder design");
+    await openControlSection(page, "Surface & label");
     const folders = page.locator(folderSelector);
     await expect
       .poll(() =>
@@ -346,6 +362,8 @@ test.describe("playground controls", () => {
 
   test("covers code tab, theme switches, and reset", async ({ page }) => {
     await openPlayground(page);
+    await openControlSection(page, "Animation & interaction");
+    await openControlSection(page, "Folder design");
     const app = page.locator(".app-shell");
     const firstFolder = page.locator(folderSelector).first();
     const firstLabel = firstFolder.locator(".folder-label");
@@ -368,12 +386,39 @@ test.describe("playground controls", () => {
 
     await page.getByRole("tab", { name: "Code" }).click();
     const codePanel = page.getByRole("tabpanel", { name: "Code" });
-    await expect(codePanel).toContainText('const animationEngine = "waapi"');
+    const codeOutput = page.getByLabel("Generated standalone code");
+    await expect(codePanel).toContainText('"animationEngine": "waapi"');
+    await expect(codePanel).toContainText("export default function FolderGridDemo");
+    await expect(codeOutput).not.toContainText('from "./');
+    await expect(page.locator("#code-panel textarea")).toHaveCount(0);
+    await expect
+      .poll(() =>
+        codeOutput.evaluate((element) => ({
+          overflowY: getComputedStyle(element).overflowY,
+          scrollHeight: element.scrollHeight,
+          clientHeight: element.clientHeight,
+        })),
+      )
+      .toEqual(
+        expect.objectContaining({
+          overflowY: "visible",
+        }),
+      );
+    await expect
+      .poll(() => codePanel.evaluate((element) => element.scrollHeight))
+      .toBeGreaterThan(await codePanel.evaluate((element) => element.clientHeight));
+    const initialPanelScroll = await codePanel.evaluate((element) => element.scrollTop);
+    await codeOutput.hover();
+    await page.mouse.wheel(0, 560);
+    await expect
+      .poll(() => codePanel.evaluate((element) => element.scrollTop))
+      .toBeGreaterThan(initialPanelScroll);
     await page.getByRole("button", { name: "Copy reusable code" }).click();
     await expect(page.getByText("Copied", { exact: true })).toBeVisible();
 
     await page.getByRole("tab", { name: "Controls" }).click();
     await page.getByRole("button", { name: "Reset settings" }).click();
+    await openControlSection(page, "Animation & interaction");
     await expect(app).toHaveAttribute("data-theme", "dark");
     await expect(page.locator('[data-animation-engine="gsap"]')).toHaveCount(20);
     await expect(
@@ -384,6 +429,7 @@ test.describe("playground controls", () => {
   test("honors reduced-motion media preference", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await openPlayground(page);
+    await openControlSection(page, "Animation & interaction");
     const engineGroup = page.getByRole("group", { name: "Engine" });
     await engineGroup.getByRole("button", { name: "CSS", exact: true }).click();
     const folder = page.locator(folderSelector).first();
@@ -416,6 +462,7 @@ test.describe("responsive layout", () => {
         .evaluateAll((folders) => folders.map((folder) => folder.getAttribute("data-deployment")));
       expect(new Set(assignments).size).toBeGreaterThanOrEqual(5);
 
+      await openControlSection(page, "Animation & interaction");
       await page
         .getByRole("group", { name: "Click" })
         .getByRole("button", { name: "Lock" })

@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { build as viteBuild, transformWithOxc } from "vite";
 import App from "./App";
 import { ENGINE_CATALOG_LIST, buildPlaygroundSnippet } from "./animation/engineCatalog";
 import { STYLES_DATA } from "./data/stylesData";
@@ -93,7 +94,7 @@ describe("App", () => {
     }
   });
 
-  it("keeps reset and generated code on the exported config contract", () => {
+  it("keeps reset and generated code on the exported config contract", async () => {
     const changed = {
       ...createDefaultPlaygroundConfig(),
       animationEngine: "waapi" as const,
@@ -103,15 +104,64 @@ describe("App", () => {
     expect(playgroundConfigReducer(changed, { type: "reset" })).toEqual(DEFAULT_PLAYGROUND_CONFIG);
 
     const snippet = buildPlaygroundSnippet(changed);
-    expect(snippet).toContain('const animationEngine = "waapi"');
-    expect(snippet).toContain("const sharedConfig = {");
-    expect(snippet).toContain("deploymentForKey(folder.id)");
-    expect(snippet).toContain("folderBorderOpacity: 0.72");
-    expect(snippet).toContain("folderBorderWidth: 0");
-    expect(snippet).toContain("cardShadowBlur: 18");
-    expect(snippet).toContain("cardShadowOpacity: 0.22");
-    expect(snippet).not.toContain("folders.map");
-    expect(snippet).not.toContain("sharedSettings");
+    expect(snippet).toContain('"animationEngine": "waapi"');
+    expect(snippet).toContain('"transitionCurve": "tween"');
+    expect(snippet).toContain('"folderBorderOpacity": 0.72');
+    expect(snippet).toContain('"folderBorderWidth": 0');
+    expect(snippet).toContain('"cardShadowBlur": 18');
+    expect(snippet).toContain('"cardShadowOpacity": 0.22');
+    expect(snippet).toContain("export default function FolderGridDemo");
+    expect(snippet).toContain("element.animate(");
+    expect(snippet).not.toMatch(/from ["']\.\//);
+    expect(snippet).not.toContain("STYLES_DATA");
+    expect(snippet).not.toContain("StyleFolder");
+    await expect(
+      transformWithOxc(snippet, "standalone-folder.jsx", { lang: "jsx" }),
+    ).resolves.toBeDefined();
+  });
+
+  it("generates a parseable single-file adapter for every animation engine", async () => {
+    const virtualEntries = new Map<string, string>();
+
+    for (const engine of ENGINE_CATALOG_LIST) {
+      const snippet = buildPlaygroundSnippet({
+        ...createDefaultPlaygroundConfig(),
+        animationEngine: engine.id,
+      });
+      virtualEntries.set(`virtual:standalone-${engine.id}.jsx`, snippet);
+      expect(snippet).not.toMatch(/from ["']\.\//);
+      expect(snippet).toContain(`"animationEngine": "${engine.id}"`);
+      await expect(
+        transformWithOxc(snippet, `standalone-${engine.id}.jsx`, { lang: "jsx" }),
+      ).resolves.toBeDefined();
+    }
+
+    await expect(
+      viteBuild({
+        configFile: false,
+        logLevel: "silent",
+        plugins: [
+          {
+            name: "standalone-code-verification",
+            resolveId(id) {
+              return virtualEntries.has(id) ? `\0${id}` : undefined;
+            },
+            load(id) {
+              return id.startsWith("\0") ? virtualEntries.get(id.slice(1)) : undefined;
+            },
+          },
+        ],
+        build: {
+          write: false,
+          minify: false,
+          rollupOptions: {
+            input: Object.fromEntries(
+              [...virtualEntries.keys()].map((id) => [id.replace(/\W+/g, "-"), id]),
+            ),
+          },
+        },
+      }),
+    ).resolves.toBeDefined();
   });
 
   it("marks any manual deviation from a complete preset as custom", () => {
