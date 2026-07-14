@@ -118,6 +118,8 @@ const sharedConfig = {
   labelBackdropBlur: ${config.labelBackdropBlur},
   folderBorderWidth: ${config.folderBorderWidth},
   folderBorderOpacity: ${config.folderBorderOpacity},
+  cardShadowBlur: ${config.cardShadowBlur},
+  cardShadowOpacity: ${config.cardShadowOpacity},
   folderRadius: ${config.folderRadius},
   paletteId: ${quote(config.paletteId)} as const,
   visualSource: ${quote(config.visualSource)} as const,

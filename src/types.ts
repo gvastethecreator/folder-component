@@ -118,6 +118,8 @@ export interface PlaygroundConfig {
   labelBackdropBlur: number;
   folderBorderWidth: number;
   folderBorderOpacity: number;
+  cardShadowBlur: number;
+  cardShadowOpacity: number;
   folderRadius: number;
   paletteId: PaletteId;
   visualSource: VisualSource;
@@ -156,8 +158,10 @@ export const DEFAULT_PLAYGROUND_CONFIG: PlaygroundConfig = {
   labelVisible: true,
   labelOpacity: 0.9,
   labelBackdropBlur: 8,
-  folderBorderWidth: 1,
+  folderBorderWidth: 0,
   folderBorderOpacity: 0.72,
+  cardShadowBlur: 18,
+  cardShadowOpacity: 0.22,
   folderRadius: 12,
   paletteId: "graphite",
   visualSource: "image",

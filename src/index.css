@@ -1059,24 +1059,27 @@ input[type="range"]::-moz-range-thumb:hover {
 }
 
 .style-folder .folder-front {
-  overflow: clip;
+  overflow: visible;
+  clip-path: inset(0 round var(--folder-radius));
 }
 
-.style-folder[data-label-visible="true"] .folder-front > :is(img, [data-image-state]) {
-  clip-path: polygon(
-    0 0,
-    100% 0,
-    100% calc(100% - var(--folder-radius)),
-    calc(100% - var(--folder-radius)) calc(100% - var(--folder-radius)),
-    calc(100% - var(--folder-radius)) 100%,
-    var(--folder-radius) 100%,
-    var(--folder-radius) calc(100% - var(--folder-radius)),
-    0 calc(100% - var(--folder-radius))
+.style-folder[data-card-style="folder"][data-tab-alignment="left"] .folder-front {
+  clip-path: inset(
+    0 round calc(var(--folder-radius) * 0.35) var(--folder-radius) var(--folder-radius)
+  );
+}
+
+.style-folder[data-card-style="folder"][data-tab-alignment="right"] .folder-front {
+  clip-path: inset(
+    0 round var(--folder-radius) calc(var(--folder-radius) * 0.35) var(--folder-radius)
+      var(--folder-radius)
   );
 }
 
 .style-folder .file-card {
   border-radius: var(--folder-inner-radius);
+  box-shadow: 0 var(--folder-card-shadow-offset) var(--folder-card-shadow-blur)
+    rgb(0 0 0 / var(--folder-card-shadow-opacity));
 }
 
 .style-folder .folder-tab {

@@ -37,6 +37,7 @@ import {
   IconRectangleVertical,
   IconRefresh,
   IconSettings,
+  IconShadow,
   IconSparkles,
   IconSpacingHorizontal,
   IconSquare,
@@ -161,6 +162,10 @@ interface PlaygroundControlsProps {
   setFolderBorderWidth: Dispatch<SetStateAction<number>>;
   folderBorderOpacity: number;
   setFolderBorderOpacity: Dispatch<SetStateAction<number>>;
+  cardShadowBlur: number;
+  setCardShadowBlur: Dispatch<SetStateAction<number>>;
+  cardShadowOpacity: number;
+  setCardShadowOpacity: Dispatch<SetStateAction<number>>;
   folderRadius: number;
   setFolderRadius: Dispatch<SetStateAction<number>>;
   paletteId: PaletteId;
@@ -397,6 +402,10 @@ export default function PlaygroundControls({
   setFolderBorderWidth,
   folderBorderOpacity,
   setFolderBorderOpacity,
+  cardShadowBlur,
+  setCardShadowBlur,
+  cardShadowOpacity,
+  setCardShadowOpacity,
   folderRadius,
   setFolderRadius,
   paletteId,
@@ -452,6 +461,8 @@ export default function PlaygroundControls({
     labelBackdropBlur,
     folderBorderWidth,
     folderBorderOpacity,
+    cardShadowBlur,
+    cardShadowOpacity,
     folderRadius,
     paletteId,
     visualSource,
@@ -848,6 +859,30 @@ export default function PlaygroundControls({
                 max={1}
                 step={0.05}
                 onChange={setFolderBorderOpacity}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <RangeControl
+                id="card-shadow-blur"
+                label="Shadow blur"
+                icon={IconShadow}
+                value={cardShadowBlur}
+                display={`${cardShadowBlur}px`}
+                min={0}
+                max={40}
+                step={1}
+                onChange={setCardShadowBlur}
+              />
+              <RangeControl
+                id="card-shadow-opacity"
+                label="Shadow opacity"
+                icon={IconDropletHalf}
+                value={cardShadowOpacity}
+                display={`${Math.round(cardShadowOpacity * 100)}%`}
+                min={0}
+                max={0.6}
+                step={0.02}
+                onChange={setCardShadowOpacity}
               />
             </div>
             <RangeControl
