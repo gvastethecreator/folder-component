@@ -53,7 +53,7 @@ variables. Pexels imagery is used under the [Pexels license](https://www.pexels.
 
 ## Status
 
-- Release-candidate checks cover 47 unit tests and 12 Chromium end-to-end scenarios.
+- Release-candidate checks cover 90 unit tests and 19 Chromium end-to-end scenarios.
 - Firefox, Safari, and manual screen-reader testing are not part of the automated baseline.
 - All five animation adapters are intentionally bundled together for instant comparison.
 

@@ -1,6 +1,6 @@
 # Project Readiness
 
-Current local baseline: 2026-07-13.
+Current local baseline: 2026-07-14.
 
 ## Release gates
 
@@ -9,8 +9,8 @@ Current local baseline: 2026-07-13.
 | Type safety           | `bun run typecheck`    | Required                                   |
 | Lint                  | `bun run lint`         | Required                                   |
 | Format                | `bun run format:check` | Required                                   |
-| Unit behavior         | `bun run test`         | 47 tests                                   |
-| Chromium flows        | `bun run test:e2e`     | 12 scenarios                               |
+| Unit behavior         | `bun run test`         | 90 tests                                   |
+| Chromium flows        | `bun run test:e2e`     | 19 scenarios                               |
 | Production artifact   | `bun run build`        | Required                                   |
 | GitHub Pages artifact | `bun run build:pages`  | Required                                   |
 | Dependency audit      | `bun audit`            | Required; production findings must be zero |
@@ -21,10 +21,15 @@ border geometry, active-folder stacking, label visibility/opacity/backdrop/clip,
 noise, image fallbacks, and reduced motion. Green E2E runs emit viewport and active-folder
 screenshots under `test-results/`; CI uploads them with the Playwright diagnostics artifact.
 
+The controls rail precedes the gallery in document and keyboard order while CSS retains the
+desktop two-column composition. This keeps the mobile visual order aligned with assistive
+technology without changing the desktop layout.
+
 ## Release shape
 
 - Static React/Vite application; no backend, secrets, API keys, or runtime environment variables.
-- GitHub Pages publishes through `.github/workflows/pages.yml` from `main`.
+- GitHub Pages publishes through `.github/workflows/pages.yml` from `main`; every third-party
+  action is pinned to an immutable commit SHA with its release version documented inline.
 - Project-page base path is `/folder-component/`; the local build remains root-hosted.
 - Remote Pexels images degrade to deterministic local tone surfaces when unavailable.
 

@@ -18,6 +18,11 @@ engine labels, capability notes, and the live single-file React export. The expo
 data and styles, contains no project-local imports or remote assets, and emits only the adapter
 required by the selected engine.
 
+`src/animation/animationTiming.ts` is the timing source of truth shared by the live adapters and
+the generated export. It maps each curve to duration, native easing, GSAP easing, and Motion or
+Anime.js spring profiles. Closing stagger order, reduced-motion behavior, and selected tone/image
+surfaces are also preserved by the export contract.
+
 The shared geometry contract exposes nine layouts (`fan`, `skew3d`, `cascade`, `scatter`,
 `horizontal_stack`, `orbit`, `staircase`, `burst`, and `deck_split`). Every engine receives the
 same collapsed and expanded transform arrays, so layout behavior cannot drift between adapters.
