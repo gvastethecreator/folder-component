@@ -489,40 +489,38 @@ function StyleFolder({
       <div
         id={`folder-back-${folder.id}`}
         className="folder-back folder-surface absolute inset-0 border bg-neutral-900"
-        style={{ boxShadow: "0 14px 28px rgb(0 0 0 / 0.24)" }}
       >
         {cardStyle === "folder" && (
-          <div
-            className="folder-tab absolute overflow-hidden border-x border-t bg-neutral-800"
-            aria-hidden="true"
-          >
-            {tabFill === "image" && visualSource === "image" ? (
-              <ImageWithFallback
-                src={folder.coverImage}
-                srcSet={pexelsSrcSet(folder.coverImage)}
-                sizes={`${Math.round((gridItemSize * tabWidth) / 100)}px`}
-                alt=""
-                fallbackSeed={folder.id}
-                width={800}
-                height={1000}
-                className="h-full w-full scale-110 object-cover opacity-80 blur-[2px]"
-                referrerPolicy="no-referrer"
-                loading="lazy"
-                decoding="async"
-                draggable={false}
-              />
-            ) : (
-              <span
-                className="block h-full w-full"
-                style={{
-                  backgroundColor: tabFill === "color" ? tabColor : neutralTone(folder.id),
-                }}
-              />
-            )}
+          <div className="folder-tab absolute" aria-hidden="true">
+            <div className="folder-tab-content absolute">
+              {tabFill === "image" && visualSource === "image" ? (
+                <ImageWithFallback
+                  src={folder.coverImage}
+                  srcSet={pexelsSrcSet(folder.coverImage)}
+                  sizes={`${Math.round((gridItemSize * tabWidth) / 100)}px`}
+                  alt=""
+                  fallbackSeed={folder.id}
+                  width={800}
+                  height={1000}
+                  className="h-full w-full scale-110 object-cover opacity-80 blur-[2px]"
+                  referrerPolicy="no-referrer"
+                  loading="lazy"
+                  decoding="async"
+                  draggable={false}
+                />
+              ) : (
+                <span
+                  className="block h-full w-full"
+                  style={{
+                    backgroundColor: tabFill === "color" ? tabColor : neutralTone(folder.id),
+                  }}
+                />
+              )}
+            </div>
           </div>
         )}
 
-        <div className="absolute inset-x-3 top-3 flex items-center justify-between font-mono text-[7px] tracking-[0.12em] text-neutral-300">
+        <div className="folder-back-meta absolute inset-x-3 top-3 flex items-center justify-between font-mono text-[7px] tracking-[0.12em] text-neutral-300">
           <span>STACK</span>
           <span>{String(folder.files.length).padStart(2, "0")}</span>
         </div>
@@ -569,7 +567,7 @@ function StyleFolder({
                 style={{ backgroundColor: neutralTone(file.id, index + 1) }}
               />
             )}
-            <div className="absolute inset-x-0 bottom-0 border-t border-white/10 bg-black/80 px-2 py-1.5">
+            <div className="file-card-label absolute inset-x-0 bottom-0 border-t border-white/10 bg-black/80 px-2 py-1.5">
               <span className="block truncate font-mono text-[7px] tracking-wide text-neutral-300">
                 {file.name}
               </span>
@@ -586,10 +584,7 @@ function StyleFolder({
           transformOrigin: "bottom center",
         }}
       >
-        <div
-          className="folder-front folder-surface absolute inset-0 overflow-hidden border bg-neutral-900"
-          style={{ boxShadow: "0 16px 32px rgb(0 0 0 / 0.3), inset 0 1px rgb(255 255 255 / 0.05)" }}
-        >
+        <div className="folder-front folder-surface absolute inset-0 overflow-hidden border bg-neutral-900">
           {visualSource === "image" ? (
             <ImageWithFallback
               src={folder.coverImage}
@@ -620,7 +615,7 @@ function StyleFolder({
             <div
               className="folder-label absolute border-t p-2.5"
               style={{
-                backgroundColor: `rgb(10 10 10 / ${labelOpacity})`,
+                backgroundColor: `rgb(var(--folder-label-rgb) / ${labelOpacity})`,
                 backdropFilter:
                   labelOpacity < 1 && labelBackdropBlur > 0
                     ? `blur(${labelBackdropBlur}px)`
@@ -633,17 +628,17 @@ function StyleFolder({
             >
               <div className="flex min-w-0 items-center justify-between gap-2">
                 <span
-                  className="min-w-0 truncate text-[10px] font-medium tracking-tight text-neutral-100"
+                  className="folder-label-title min-w-0 truncate text-[10px] font-medium tracking-tight text-neutral-100"
                   title={folder.title}
                 >
                   {folder.title}
                 </span>
-                <span className="shrink-0 font-mono text-[8px] tabular-nums text-neutral-300">
+                <span className="folder-label-count shrink-0 font-mono text-[8px] tabular-nums text-neutral-300">
                   {String(folder.files.length).padStart(2, "0")}
                 </span>
               </div>
               {!compact && (
-                <p className="mt-1 line-clamp-2 text-[9px] leading-3 text-neutral-300">
+                <p className="folder-label-description mt-1 line-clamp-2 text-[9px] leading-3 text-neutral-300">
                   {folder.description}
                 </p>
               )}
@@ -652,7 +647,7 @@ function StyleFolder({
 
           <div
             ref={flashRef}
-            className="pointer-events-none absolute inset-0 bg-white opacity-0"
+            className="folder-flash pointer-events-none absolute inset-0 bg-white opacity-0"
             aria-hidden="true"
           />
         </div>
