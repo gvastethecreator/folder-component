@@ -107,6 +107,9 @@ describe("App", () => {
     expect(snippet).toContain("const sharedConfig = {");
     expect(snippet).toContain("deploymentForKey(folder.id)");
     expect(snippet).toContain("folderBorderOpacity: 0.72");
+    expect(snippet).toContain("folderBorderWidth: 0");
+    expect(snippet).toContain("cardShadowBlur: 18");
+    expect(snippet).toContain("cardShadowOpacity: 0.22");
     expect(snippet).not.toContain("folders.map");
     expect(snippet).not.toContain("sharedSettings");
   });

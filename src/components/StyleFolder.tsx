@@ -63,6 +63,8 @@ interface StyleFolderProps {
   labelBackdropBlur?: number;
   folderBorderWidth?: number;
   folderBorderOpacity?: number;
+  cardShadowBlur?: number;
+  cardShadowOpacity?: number;
   folderRadius?: number;
   paletteId?: PaletteId;
   visualSource?: "image" | "tone";
@@ -240,8 +242,10 @@ function StyleFolder({
   labelVisible = true,
   labelOpacity = 0.9,
   labelBackdropBlur = 8,
-  folderBorderWidth = 1,
+  folderBorderWidth = 0,
   folderBorderOpacity = 0.72,
+  cardShadowBlur = 18,
+  cardShadowOpacity = 0.22,
   folderRadius = 12,
   paletteId = "graphite",
   visualSource = "image",
@@ -464,6 +468,9 @@ function StyleFolder({
           "--folder-inner-radius": `${Math.max(0, folderRadius - 2)}px`,
           "--folder-border-width": `${folderBorderWidth}px`,
           "--folder-border-opacity": `${folderBorderOpacity * 100}%`,
+          "--folder-card-shadow-blur": `${cardShadowBlur}px`,
+          "--folder-card-shadow-offset": `${Math.round(cardShadowBlur * 0.34)}px`,
+          "--folder-card-shadow-opacity": cardShadowOpacity,
           "--folder-tab-width": `${tabWidth}%`,
           "--folder-tab-height": `${tabHeight}px`,
         } as CSSProperties
@@ -533,7 +540,6 @@ function StyleFolder({
             style={{
               zIndex: 10 + index,
               transformOrigin: "bottom center",
-              boxShadow: "0 10px 20px rgb(0 0 0 / 0.28)",
             }}
           >
             {visualSource === "image" ? (

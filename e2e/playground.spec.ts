@@ -140,11 +140,52 @@ test.describe("animation engines and interaction", () => {
 });
 
 test.describe("playground controls", () => {
+  test("uses one front clip and configurable shadows for the stacked cards", async ({ page }) => {
+    const consoleErrors: string[] = [];
+    const pageErrors: string[] = [];
+    page.on("console", (message) => {
+      if (message.type() === "error") consoleErrors.push(message.text());
+    });
+    page.on("pageerror", (error) => pageErrors.push(error.message));
+
+    await openPlayground(page);
+    const folder = page.locator(folderSelector).first();
+    const front = folder.locator(".folder-front");
+    const label = folder.locator(".folder-label");
+    const card = folder.locator(".file-card").first();
+
+    await expect(page.getByRole("slider", { name: "Border size" })).toHaveValue("0");
+    await expect(front).toHaveCSS("clip-path", "inset(0px round 4.2px 12px 12px)");
+    await expect(front.locator(":scope > img")).toHaveCSS("clip-path", "none");
+    await expect
+      .poll(() =>
+        label.evaluate((element) => element.parentElement?.classList.contains("folder-front")),
+      )
+      .toBe(true);
+    await expect(card).toHaveCSS("box-shadow", "rgba(0, 0, 0, 0.22) 0px 6px 18px 0px");
+    await page.waitForTimeout(1500);
+    await page.screenshot({ path: "test-results/visual-proof-default-unified-clip.png" });
+
+    await setRange(page, "Shadow blur", 30);
+    await setRange(page, "Shadow opacity", 0.4);
+    await folder.hover();
+    await expect(folder).toHaveAttribute("aria-expanded", "true");
+    await expect(card).toHaveCSS("box-shadow", "rgba(0, 0, 0, 0.4) 0px 10px 30px 0px");
+    await page.waitForTimeout(450);
+    await page.getByRole("slider", { name: "Shadow blur" }).scrollIntoViewIfNeeded();
+    await page.screenshot({ path: "test-results/visual-proof-configurable-card-shadow.png" });
+
+    expect(consoleErrors).toEqual([]);
+    expect(pageErrors).toEqual([]);
+  });
+
   test("keeps every cover unique and applies presets, palettes, layouts, and curves", async ({
     page,
   }) => {
     await openPlayground(page);
     const folders = page.locator(folderSelector);
+    await expect(page.getByRole("slider", { name: "Border size" })).toHaveValue("0");
+    await expect(folders.first()).toHaveCSS("--folder-border-width", "0px");
     const covers = await folders.evaluateAll((nodes) =>
       nodes.map((node) => node.getAttribute("data-cover-image")),
     );
@@ -198,6 +239,14 @@ test.describe("playground controls", () => {
       "background-color",
       "rgba(10, 10, 10, 0.4)",
     );
+    await setRange(page, "Shadow blur", 28);
+    await setRange(page, "Shadow opacity", 0.36);
+    await expect(folders.first()).toHaveCSS("--folder-card-shadow-blur", "28px");
+    await expect(folders.first()).toHaveCSS("--folder-card-shadow-opacity", "0.36");
+    await expect(folders.first().locator(".file-card").first()).toHaveCSS(
+      "box-shadow",
+      "rgba(0, 0, 0, 0.36) 0px 10px 28px 0px",
+    );
     await expect(folders.first().locator(".folder-label")).toHaveCSS(
       "backdrop-filter",
       "blur(16px)",
@@ -224,7 +273,9 @@ test.describe("playground controls", () => {
     await setRange(page, "Border size", 0);
     await setRange(page, "Label opacity", 1);
     const firstLabel = folders.first().locator(".folder-label");
-    await expect(folders.first().locator(".folder-front")).toHaveCSS("overflow", "clip");
+    const firstFront = folders.first().locator(".folder-front");
+    await expect(firstFront).toHaveCSS("overflow", "visible");
+    await expect(firstFront).toHaveCSS("clip-path", "inset(0px round 12px 4.2px 12px 12px)");
     await expect(firstLabel).toHaveCSS("clip-path", "none");
     await expect(firstLabel).toHaveCSS("border-bottom-left-radius", "0px");
     await expect(firstLabel).toHaveCSS("border-bottom-right-radius", "0px");
@@ -232,10 +283,12 @@ test.describe("playground controls", () => {
     await expect(firstLabel).toHaveCSS("right", "-3px");
     await expect(firstLabel).toHaveCSS("bottom", "-3px");
     await expect(firstLabel).toHaveCSS("backdrop-filter", "none");
-    await expect(folders.first().locator(".folder-front > img")).toHaveCSS(
-      "clip-path",
-      "polygon(0px 0px, 100% 0px, 100% calc(100% - 12px), calc(100% - 12px) calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 12px calc(100% - 12px), 0px calc(100% - 12px))",
-    );
+    await expect(firstFront.locator(":scope > img")).toHaveCSS("clip-path", "none");
+    await expect
+      .poll(() =>
+        firstLabel.evaluate((label) => label.parentElement?.classList.contains("folder-front")),
+      )
+      .toBe(true);
     await page.screenshot({ path: "test-results/visual-proof-border-zero-label.png" });
 
     await page.getByRole("switch", { name: /Text container/i }).click();

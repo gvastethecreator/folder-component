@@ -64,6 +64,8 @@ export default function App() {
     labelBackdropBlur,
     folderBorderWidth,
     folderBorderOpacity,
+    cardShadowBlur,
+    cardShadowOpacity,
     folderRadius,
     paletteId,
     visualSource,
@@ -146,6 +148,8 @@ export default function App() {
                 labelBackdropBlur={labelBackdropBlur}
                 folderBorderWidth={folderBorderWidth}
                 folderBorderOpacity={folderBorderOpacity}
+                cardShadowBlur={cardShadowBlur}
+                cardShadowOpacity={cardShadowOpacity}
                 folderRadius={folderRadius}
                 paletteId={paletteId}
                 visualSource={visualSource}
@@ -217,6 +221,10 @@ export default function App() {
             setFolderBorderWidth={(value) => setConfigValue("folderBorderWidth", value)}
             folderBorderOpacity={folderBorderOpacity}
             setFolderBorderOpacity={(value) => setConfigValue("folderBorderOpacity", value)}
+            cardShadowBlur={cardShadowBlur}
+            setCardShadowBlur={(value) => setConfigValue("cardShadowBlur", value)}
+            cardShadowOpacity={cardShadowOpacity}
+            setCardShadowOpacity={(value) => setConfigValue("cardShadowOpacity", value)}
             folderRadius={folderRadius}
             setFolderRadius={(value) => setConfigValue("folderRadius", value)}
             paletteId={paletteId}

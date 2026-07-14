@@ -159,6 +159,8 @@ describe("StyleFolder", () => {
         labelBackdropBlur={16}
         folderBorderWidth={2.5}
         folderBorderOpacity={0.45}
+        cardShadowBlur={26}
+        cardShadowOpacity={0.4}
         folderRadius={20}
       />,
     );
@@ -172,7 +174,13 @@ describe("StyleFolder", () => {
       "--folder-tab-height": "18px",
       "--folder-border-width": "2.5px",
       "--folder-border-opacity": "45%",
+      "--folder-card-shadow-blur": "26px",
+      "--folder-card-shadow-offset": "9px",
+      "--folder-card-shadow-opacity": "0.4",
       "--folder-radius": "20px",
+    });
+    expect(container.querySelector(".file-card")).toHaveStyle({
+      boxShadow: expect.stringContaining("var(--folder-card-shadow-opacity)"),
     });
     expect(container.querySelector(".folder-label")).not.toBeInTheDocument();
   });
