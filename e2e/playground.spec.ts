@@ -221,6 +221,15 @@ test.describe("playground controls", () => {
       )
       .toBe(true);
 
+    await setRange(page, "Border size", 0);
+    await setRange(page, "Label opacity", 1);
+    const firstLabel = folders.first().locator(".folder-label");
+    await expect(folders.first().locator(".folder-front")).toHaveCSS("overflow", "clip");
+    await expect(firstLabel).toHaveCSS("clip-path", "none");
+    await expect(firstLabel).toHaveCSS("border-bottom-left-radius", "0px");
+    await expect(firstLabel).toHaveCSS("border-bottom-right-radius", "0px");
+    await page.screenshot({ path: "test-results/visual-proof-border-zero-label.png" });
+
     await page.getByRole("switch", { name: /Text container/i }).click();
     await expect(page.locator(".folder-label")).toHaveCount(0);
 
