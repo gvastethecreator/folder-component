@@ -8,6 +8,7 @@ import {
   type FolderEngineOptions,
 } from "../animation/folderEngines";
 import { getCollapsedTransforms, getExpandedTransforms } from "../animation/folderGeometry";
+import { getMotionDuration } from "../animation/animationTiming";
 import ImageWithFallback, { neutralTone } from "./ImageWithFallback";
 import { FOLDER_PALETTES } from "../config/playgroundCatalog";
 import type {
@@ -194,14 +195,7 @@ function StyleFolder({
       reducedMotion,
       transitionCurve,
       springSettings,
-      duration:
-        transitionCurve === "spring"
-          ? clamp(0.34, 0.72, 0.58 + springSettings.mass * 0.08 - springSettings.stiffness / 1250)
-          : transitionCurve === "bounce"
-            ? 0.56
-            : transitionCurve === "elastic"
-              ? 0.68
-              : 0.38,
+      duration: getMotionDuration(transitionCurve, springSettings),
       staggerDelay,
     };
   };

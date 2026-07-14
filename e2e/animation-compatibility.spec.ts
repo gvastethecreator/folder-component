@@ -288,16 +288,32 @@ test.describe("animation compatibility matrix", () => {
     await selectSegment(page, "Click", "Flash");
     for (const engine of engines) {
       await selectSegment(page, "Engine", engine);
+
+      if (engine !== "CSS") {
+        await flash.evaluate((element) => {
+          const flashElement = element as HTMLElement;
+          flashElement.dataset.observedVisible = "false";
+          const startedAt = performance.now();
+          const sampleOpacity = () => {
+            if (Number.parseFloat(getComputedStyle(flashElement).opacity) > 0) {
+              flashElement.dataset.observedVisible = "true";
+              return;
+            }
+            if (performance.now() - startedAt < 2_000) requestAnimationFrame(sampleOpacity);
+          };
+          requestAnimationFrame(sampleOpacity);
+        });
+      }
+
       await folder.click();
 
       if (engine === "CSS") {
         await expect(flash).toHaveClass(/is-css-flashing/);
       } else {
-        await expect
-          .poll(() => flash.evaluate((element) => getComputedStyle(element).opacity), {
-            message: `${engine} flash feedback`,
-          })
-          .not.toBe("0");
+        await expect(flash, `${engine} flash feedback`).toHaveAttribute(
+          "data-observed-visible",
+          "true",
+        );
       }
 
       await page.getByRole("heading", { name: "Folder Motion Lab" }).click();

@@ -87,78 +87,6 @@ export default function App() {
     >
       {/* MAIN CONTAINER */}
       <main className="w-full h-full lg:h-screen relative z-10 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_20rem] min-h-0 overflow-y-auto lg:overflow-hidden">
-        {/* LEFT CONTAINER: INTERACTIVE CARD GRID */}
-        <div className="order-last lg:order-first w-full h-full flex flex-col justify-start p-4 sm:p-6 lg:p-8 min-h-0 lg:overflow-y-auto custom-scrollbar">
-          <header className="gallery-header flex items-center justify-between border-b border-neutral-800 px-1 pb-3">
-            <div>
-              <h1 className="text-sm font-semibold tracking-tight text-neutral-100">
-                Folder Motion Lab
-              </h1>
-              <p className="mt-0.5 text-[10px] text-neutral-500">
-                {engine.statusLabel} · shared rendering controls
-              </p>
-            </div>
-            <div className="flex items-center gap-2 font-mono text-[9px] tabular-nums text-neutral-500">
-              <span>{STYLES_DATA.length} ITEMS</span>
-              <span aria-hidden="true">/</span>
-              <span>{engine.statusLabel}</span>
-            </div>
-          </header>
-          {/* FOLDERS GRID CONTAINER */}
-          <div
-            id="folders-grid"
-            data-grid-size={gridItemSize}
-            className="folders-grid justify-items-center py-16 xl:pt-28 xl:pb-16 px-2 sm:px-4"
-            style={
-              {
-                "--grid-item-min": `${gridItemSize}px`,
-              } as CSSProperties
-            }
-          >
-            {STYLES_DATA.map((folder, index) => (
-              <StyleFolder
-                key={folder.id}
-                folder={folder}
-                orientation={orientation}
-                springSettings={springSettings}
-                spacingMultiplier={spacingMultiplier}
-                visibleCardsCount={visibleCardsCount}
-                fanDirection={fanDirection}
-                fanAngle={fanAngle}
-                coverTilt={coverTilt}
-                deploymentStyle={
-                  deploymentMode === "random" ? deploymentForKey(folder.id) : deploymentMode
-                }
-                staggerDelay={staggerDelay}
-                clickBehavior={clickBehavior}
-                transitionCurve={transitionCurve}
-                folderShape={folderShape}
-                cardStyle={cardStyle}
-                gridItemSize={gridItemSize}
-                priority={index < 2}
-                compact
-                textureEnabled={textureEnabled}
-                tabFill={tabFill}
-                tabColor={tabColor}
-                tabWidth={tabWidth}
-                tabHeight={tabHeight}
-                tabAlignment={tabAlignment}
-                labelVisible={labelVisible}
-                labelOpacity={labelOpacity}
-                labelBackdropBlur={labelBackdropBlur}
-                folderBorderWidth={folderBorderWidth}
-                folderBorderOpacity={folderBorderOpacity}
-                cardShadowBlur={cardShadowBlur}
-                cardShadowOpacity={cardShadowOpacity}
-                folderRadius={folderRadius}
-                paletteId={paletteId}
-                visualSource={visualSource}
-                animationEngine={animationEngine}
-              />
-            ))}
-          </div>
-        </div>
-
         {/* RIGHT CONTAINER: COMPACT SHARED CONTROLS */}
         <aside className="controls-rail order-first lg:order-last w-full lg:w-80 h-[min(70vh,42rem)] lg:h-full flex flex-col min-h-0 p-3 border-b lg:border-b-0 lg:border-l border-neutral-800 bg-neutral-900/20">
           <PlaygroundControls
@@ -235,6 +163,78 @@ export default function App() {
             onApplyPreset={handleApplyPreset}
           />
         </aside>
+
+        {/* LEFT CONTAINER: INTERACTIVE CARD GRID */}
+        <div className="order-last lg:order-first w-full h-full flex flex-col justify-start p-4 sm:p-6 lg:p-8 min-h-0 lg:overflow-y-auto custom-scrollbar">
+          <header className="gallery-header flex items-center justify-between border-b border-neutral-800 px-1 pb-3">
+            <div>
+              <h1 className="text-sm font-semibold tracking-tight text-neutral-100">
+                Folder Motion Lab
+              </h1>
+              <p className="mt-0.5 text-[10px] text-neutral-500">
+                {engine.statusLabel} · shared rendering controls
+              </p>
+            </div>
+            <div className="flex items-center gap-2 font-mono text-[9px] tabular-nums text-neutral-500">
+              <span>{STYLES_DATA.length} ITEMS</span>
+              <span aria-hidden="true">/</span>
+              <span>{engine.statusLabel}</span>
+            </div>
+          </header>
+          {/* FOLDERS GRID CONTAINER */}
+          <div
+            id="folders-grid"
+            data-grid-size={gridItemSize}
+            className="folders-grid justify-items-center py-16 xl:pt-28 xl:pb-16 px-2 sm:px-4"
+            style={
+              {
+                "--grid-item-min": `${gridItemSize}px`,
+              } as CSSProperties
+            }
+          >
+            {STYLES_DATA.map((folder, index) => (
+              <StyleFolder
+                key={folder.id}
+                folder={folder}
+                orientation={orientation}
+                springSettings={springSettings}
+                spacingMultiplier={spacingMultiplier}
+                visibleCardsCount={visibleCardsCount}
+                fanDirection={fanDirection}
+                fanAngle={fanAngle}
+                coverTilt={coverTilt}
+                deploymentStyle={
+                  deploymentMode === "random" ? deploymentForKey(folder.id) : deploymentMode
+                }
+                staggerDelay={staggerDelay}
+                clickBehavior={clickBehavior}
+                transitionCurve={transitionCurve}
+                folderShape={folderShape}
+                cardStyle={cardStyle}
+                gridItemSize={gridItemSize}
+                priority={index < 2}
+                compact
+                textureEnabled={textureEnabled}
+                tabFill={tabFill}
+                tabColor={tabColor}
+                tabWidth={tabWidth}
+                tabHeight={tabHeight}
+                tabAlignment={tabAlignment}
+                labelVisible={labelVisible}
+                labelOpacity={labelOpacity}
+                labelBackdropBlur={labelBackdropBlur}
+                folderBorderWidth={folderBorderWidth}
+                folderBorderOpacity={folderBorderOpacity}
+                cardShadowBlur={cardShadowBlur}
+                cardShadowOpacity={cardShadowOpacity}
+                folderRadius={folderRadius}
+                paletteId={paletteId}
+                visualSource={visualSource}
+                animationEngine={animationEngine}
+              />
+            ))}
+          </div>
+        </div>
       </main>
     </div>
   );
