@@ -228,6 +228,14 @@ test.describe("playground controls", () => {
     await expect(firstLabel).toHaveCSS("clip-path", "none");
     await expect(firstLabel).toHaveCSS("border-bottom-left-radius", "0px");
     await expect(firstLabel).toHaveCSS("border-bottom-right-radius", "0px");
+    await expect(firstLabel).toHaveCSS("left", "-3px");
+    await expect(firstLabel).toHaveCSS("right", "-3px");
+    await expect(firstLabel).toHaveCSS("bottom", "-3px");
+    await expect(firstLabel).toHaveCSS("backdrop-filter", "none");
+    await expect(folders.first().locator(".folder-front > img")).toHaveCSS(
+      "clip-path",
+      "polygon(0px 0px, 100% 0px, 100% calc(100% - 12px), calc(100% - 12px) calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 12px calc(100% - 12px), 0px calc(100% - 12px))",
+    );
     await page.screenshot({ path: "test-results/visual-proof-border-zero-label.png" });
 
     await page.getByRole("switch", { name: /Text container/i }).click();
