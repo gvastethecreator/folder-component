@@ -615,8 +615,14 @@ function StyleFolder({
               className="folder-label absolute border-t p-2.5"
               style={{
                 backgroundColor: `rgb(10 10 10 / ${labelOpacity})`,
-                backdropFilter: `blur(${labelBackdropBlur}px)`,
-                WebkitBackdropFilter: `blur(${labelBackdropBlur}px)`,
+                backdropFilter:
+                  labelOpacity < 1 && labelBackdropBlur > 0
+                    ? `blur(${labelBackdropBlur}px)`
+                    : "none",
+                WebkitBackdropFilter:
+                  labelOpacity < 1 && labelBackdropBlur > 0
+                    ? `blur(${labelBackdropBlur}px)`
+                    : "none",
               }}
             >
               <div className="flex min-w-0 items-center justify-between gap-2">

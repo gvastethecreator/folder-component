@@ -1062,6 +1062,19 @@ input[type="range"]::-moz-range-thumb:hover {
   overflow: clip;
 }
 
+.style-folder[data-label-visible="true"] .folder-front > :is(img, [data-image-state]) {
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    100% calc(100% - var(--folder-radius)),
+    calc(100% - var(--folder-radius)) calc(100% - var(--folder-radius)),
+    calc(100% - var(--folder-radius)) 100%,
+    var(--folder-radius) 100%,
+    var(--folder-radius) calc(100% - var(--folder-radius)),
+    0 calc(100% - var(--folder-radius))
+  );
+}
+
 .style-folder .file-card {
   border-radius: var(--folder-inner-radius);
 }
@@ -1093,9 +1106,14 @@ input[type="range"]::-moz-range-thumb:hover {
 }
 
 .style-folder .folder-label {
-  right: 0;
-  bottom: 0;
-  left: 0;
+  --folder-label-bleed: clamp(
+    0px,
+    calc(3px - var(--folder-border-width) - var(--folder-border-width)),
+    3px
+  );
+  right: calc(var(--folder-label-bleed) * -1);
+  bottom: calc(var(--folder-label-bleed) * -1);
+  left: calc(var(--folder-label-bleed) * -1);
   border-top-width: var(--folder-border-width);
   border-top-color: color-mix(
     in srgb,
