@@ -4,13 +4,7 @@ import type { AnimationPlaybackControls } from "motion";
 import { animate as animeAnimate, spring as animeSpring } from "animejs";
 import type { JSAnimation } from "animejs";
 import type { AnimationEngine, SpringSettings, TransitionCurve } from "../types";
-
-export interface CardTransform {
-  x: number;
-  y: number;
-  rotation: number;
-  scale: number;
-}
+import type { CardTransform } from "./folderGeometry";
 
 export interface FolderEngineController {
   setOpen: (open: boolean, immediate?: boolean) => void;

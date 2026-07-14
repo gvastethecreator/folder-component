@@ -112,6 +112,10 @@ describe("App", () => {
     expect(snippet).toContain('"cardShadowOpacity": 0.22');
     expect(snippet).toContain("export default function FolderGridDemo");
     expect(snippet).toContain("element.animate(");
+    expect(snippet).toContain("x *= config.spacingMultiplier");
+    expect(snippet).toContain('config.orientation === "horizontal"');
+    expect(snippet).toContain("if (direction !== 0)");
+    expect(snippet.match(/config\.fanAngle/g)?.length).toBeGreaterThanOrEqual(9);
     expect(snippet).not.toMatch(/from ["']\.\//);
     expect(snippet).not.toContain("STYLES_DATA");
     expect(snippet).not.toContain("StyleFolder");
