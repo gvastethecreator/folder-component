@@ -14,7 +14,8 @@ component: **GSAP**, **Motion**, **Anime.js**, pure **CSS**, and native **WAAPI*
 - Apply six color palettes or a custom color from the native picker.
 - Tune tab size/alignment, label glass, border weight/opacity/radius, and SVG noise.
 - Load complete design and behavior presets from the top dropdown.
-- Copy a reusable React configuration from the Code panel.
+- Copy a live single-file React component from the Code panel; styles and demo data are embedded,
+  with no project-local file imports.
 - Use keyboard, pointer, or touch interactions with reduced-motion support.
 - Keep working when remote Pexels images fail through deterministic neutral fallbacks.
 

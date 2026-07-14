@@ -14,7 +14,9 @@ panel.
 
 GSAP, Motion, Anime.js, CSS, and WAAPI implement that contract. Geometry and deployment choice
 remain engine-independent. `src/animation/engineCatalog.ts` is the source of truth for public
-engine labels, capability notes, and the generated code example.
+engine labels, capability notes, and the live single-file React export. The export embeds its demo
+data and styles, contains no project-local imports or remote assets, and emits only the adapter
+required by the selected engine.
 
 The shared geometry contract exposes nine layouts (`fan`, `skew3d`, `cascade`, `scatter`,
 `horizontal_stack`, `orbit`, `staircase`, `burst`, and `deck_split`). Every engine receives the

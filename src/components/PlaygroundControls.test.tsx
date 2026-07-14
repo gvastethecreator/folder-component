@@ -82,6 +82,13 @@ function makeProps() {
   };
 }
 
+async function openControlSection(user: ReturnType<typeof userEvent.setup>, title: string) {
+  const titleElement = screen.getByText(title, { selector: ".control-section-title" });
+  const details = titleElement.closest("details") as HTMLDetailsElement;
+  if (!details.open) await user.click(titleElement.closest("summary") as HTMLElement);
+  expect(details.open).toBe(true);
+}
+
 describe("PlaygroundControls", () => {
   it("renders a compact panel with random plus nine graphical layout controls", () => {
     render(<PlaygroundControls {...makeProps()} />);
@@ -99,6 +106,28 @@ describe("PlaygroundControls", () => {
     }
   });
 
+  it("groups controls by intent and preserves disclosure state across live updates", async () => {
+    const user = userEvent.setup();
+    const props = makeProps();
+    const { rerender } = render(<PlaygroundControls {...props} />);
+
+    expect(
+      screen.getAllByText(
+        /Grid & expansion|Animation & interaction|Folder design|Surface & label/,
+        {
+          selector: ".control-section-title",
+        },
+      ),
+    ).toHaveLength(4);
+    expect(document.querySelectorAll(".control-section[open]")).toHaveLength(1);
+
+    await openControlSection(user, "Folder design");
+    rerender(<PlaygroundControls {...props} gridItemSize={160} />);
+    expect(
+      screen.getByText("Folder design", { selector: ".control-section-title" }).closest("details"),
+    ).toHaveAttribute("open");
+  });
+
   it("changes a shared appearance setting", async () => {
     const user = userEvent.setup();
     const props = makeProps();
@@ -112,6 +141,7 @@ describe("PlaygroundControls", () => {
     const user = userEvent.setup();
     const props = makeProps();
     const { rerender } = render(<PlaygroundControls {...props} />);
+    await openControlSection(user, "Animation & interaction");
 
     await user.click(screen.getByRole("button", { name: "Motion" }));
     expect(props.setAnimationEngine).toHaveBeenCalledWith("motion");
@@ -140,6 +170,7 @@ describe("PlaygroundControls", () => {
     const user = userEvent.setup();
     const props = makeProps();
     const { rerender } = render(<PlaygroundControls {...props} />);
+    await openControlSection(user, "Animation & interaction");
 
     await user.click(screen.getByRole("button", { name: "Tween" }));
     expect(props.setTransitionCurve).toHaveBeenCalledWith("tween");
@@ -159,6 +190,8 @@ describe("PlaygroundControls", () => {
     const user = userEvent.setup();
     const props = { ...makeProps(), tabFill: "color" as const };
     render(<PlaygroundControls {...props} />);
+    await openControlSection(user, "Folder design");
+    await openControlSection(user, "Surface & label");
 
     await user.click(screen.getByRole("button", { name: "Light" }));
     await user.click(screen.getByRole("button", { name: "Tones" }));
@@ -200,6 +233,7 @@ describe("PlaygroundControls", () => {
     const user = userEvent.setup();
     const props = makeProps();
     render(<PlaygroundControls {...props} />);
+    await openControlSection(user, "Folder design");
 
     await user.click(screen.getByRole("button", { name: "Orbit" }));
     expect(props.setDeploymentMode).toHaveBeenCalledWith("orbit");
@@ -214,6 +248,8 @@ describe("PlaygroundControls", () => {
     const user = userEvent.setup();
     const props = { ...makeProps(), textureEnabled: true };
     render(<PlaygroundControls {...props} />);
+    await openControlSection(user, "Folder design");
+    await openControlSection(user, "Surface & label");
 
     await user.click(
       within(screen.getByRole("group", { name: "Tab alignment" })).getByRole("button", {
@@ -305,14 +341,21 @@ describe("PlaygroundControls", () => {
     }
   });
 
-  it("shows the reusable random-or-fixed grid code example", async () => {
+  it("shows a live standalone component without project-local imports", async () => {
     const user = userEvent.setup();
-    render(<PlaygroundControls {...makeProps()} />);
+    const props = makeProps();
+    const { rerender } = render(<PlaygroundControls {...props} />);
 
     await user.click(screen.getByRole("tab", { name: /Code/i }));
-    expect(screen.getByText(/Grid usage/i)).toBeInTheDocument();
-    expect(screen.getByText(/deploymentForKey/, { selector: "code" })).toBeInTheDocument();
-    expect(screen.getByText(/folderBorderOpacity/, { selector: "code" })).toBeInTheDocument();
+    expect(screen.getByText(/Standalone component/i)).toBeInTheDocument();
+    const output = screen.getByLabelText("Generated standalone code");
+    expect(output).toHaveTextContent("export default function FolderGridDemo");
+    expect(output).toHaveTextContent('"animationEngine": "gsap"');
+    expect(output).not.toHaveTextContent('from "./');
+
+    rerender(<PlaygroundControls {...props} animationEngine="waapi" folderRadius={20} />);
+    expect(output).toHaveTextContent('"animationEngine": "waapi"');
+    expect(output).toHaveTextContent('"folderRadius": 20');
   });
 
   it("supports the standard keyboard pattern for its tabs", () => {

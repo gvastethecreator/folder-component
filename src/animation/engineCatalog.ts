@@ -1,4 +1,5 @@
 import type { AnimationEngine, PlaygroundConfig } from "../types";
+import { FOLDER_PALETTES } from "../config/playgroundCatalog";
 
 export type SpringCapability = "native" | "approximation";
 
@@ -68,81 +69,424 @@ export const ENGINE_CATALOG_LIST: readonly EngineCatalogEntry[] = [
 
 const quote = (value: string) => JSON.stringify(value);
 
-/**
- * Build a copyable, illustrative component example with every shared prop defined locally.
- * Project imports remain explicit so users can adapt paths without hidden placeholders.
- */
+function standaloneEngineImport(engine: AnimationEngine) {
+  if (engine === "gsap") return 'import gsap from "gsap";';
+  if (engine === "motion") return 'import { animate } from "motion";';
+  if (engine === "animejs") return 'import { animate, spring } from "animejs";';
+  return "";
+}
+
+function standaloneEngineAdapter(engine: AnimationEngine) {
+  if (engine === "gsap") {
+    return `function animateFolder(root, open, immediate = false) {
+  const duration = immediate ? 0 : motionDuration;
+  root.querySelectorAll(".demo-file").forEach((card, index) => {
+    gsap.to(card, {
+      transform: open ? card.dataset.openTransform : card.dataset.closedTransform,
+      duration,
+      delay: immediate ? 0 : index * config.staggerDelay,
+      ease: ${quote("back.out(0.8)")},
+      overwrite: "auto",
+    });
+  });
+  gsap.to(root.querySelector(".demo-front"), {
+    transform: coverTransform(open),
+    duration,
+    ease: "power3.out",
+    overwrite: "auto",
+  });
+}`;
+  }
+
+  if (engine === "motion") {
+    return `function animateFolder(root, open, immediate = false) {
+  const transition = immediate
+    ? { duration: 0 }
+    : config.transitionCurve === "tween"
+      ? { duration: motionDuration, ease: [0.16, 1, 0.3, 1] }
+      : {
+          type: "spring",
+          stiffness: config.springSettings.stiffness,
+          damping: config.springSettings.damping,
+          mass: config.springSettings.mass,
+        };
+  root.querySelectorAll(".demo-file").forEach((card, index) => {
+    animate(
+      card,
+      { transform: open ? card.dataset.openTransform : card.dataset.closedTransform },
+      { ...transition, delay: immediate ? 0 : index * config.staggerDelay },
+    );
+  });
+  animate(root.querySelector(".demo-front"), { transform: coverTransform(open) }, transition);
+}`;
+  }
+
+  if (engine === "animejs") {
+    return `function animateFolder(root, open, immediate = false) {
+  const ease =
+    config.transitionCurve === "tween"
+      ? "out(4)"
+      : spring({
+          stiffness: config.springSettings.stiffness,
+          damping: config.springSettings.damping,
+          mass: config.springSettings.mass,
+        });
+  root.querySelectorAll(".demo-file").forEach((card, index) => {
+    animate(card, {
+      transform: open ? card.dataset.openTransform : card.dataset.closedTransform,
+      duration: immediate ? 0 : motionDuration * 1000,
+      delay: immediate ? 0 : index * config.staggerDelay * 1000,
+      ease,
+    });
+  });
+  animate(root.querySelector(".demo-front"), {
+    transform: coverTransform(open),
+    duration: immediate ? 0 : motionDuration * 1000,
+    ease,
+  });
+}`;
+  }
+
+  if (engine === "waapi") {
+    return `function animateElement(element, transform, delay = 0, immediate = false) {
+  element.getAnimations().forEach((animation) => animation.cancel());
+  element.animate(
+    [{ transform: getComputedStyle(element).transform }, { transform }],
+    {
+      duration: immediate ? 0 : motionDuration * 1000,
+      delay: immediate ? 0 : delay * 1000,
+      easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+      fill: "forwards",
+    },
+  );
+}
+
+function animateFolder(root, open, immediate = false) {
+  root.querySelectorAll(".demo-file").forEach((card, index) => {
+    animateElement(
+      card,
+      open ? card.dataset.openTransform : card.dataset.closedTransform,
+      index * config.staggerDelay,
+      immediate,
+    );
+  });
+  animateElement(root.querySelector(".demo-front"), coverTransform(open), 0, immediate);
+}`;
+  }
+
+  return `function animateFolder(root, open, immediate = false) {
+  root.dataset.immediate = String(immediate);
+  root.dataset.open = String(open);
+  requestAnimationFrame(() => delete root.dataset.immediate);
+}`;
+}
+
+function standaloneStyles(config: PlaygroundConfig, palette: readonly string[]) {
+  const light = config.theme === "light";
+  const width = config.folderShape === "horizontal" ? "180px" : `${config.gridItemSize}px`;
+  const aspect =
+    config.folderShape === "vertical" ? "9 / 13" : config.folderShape === "square" ? "1" : "7 / 5";
+  const cssEase =
+    config.transitionCurve === "bounce"
+      ? "cubic-bezier(.2, 1.45, .45, 1)"
+      : config.transitionCurve === "elastic"
+        ? "cubic-bezier(.2, 1.7, .35, 1)"
+        : "cubic-bezier(.16, 1, .3, 1)";
+
+  return `.standalone-folders {
+  --accent: ${palette[0]};
+  --mid: ${palette[1]};
+  --deep: ${palette[2]};
+  min-height: 100vh;
+  padding: 48px;
+  color: ${light ? "#242321" : "#f5f5f4"};
+  background: ${light ? "#f4f3ef" : "#090909"};
+  font: 500 12px/1.4 Inter, ui-sans-serif, system-ui, sans-serif;
+}
+.demo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, ${config.gridItemSize}px), 1fr));
+  gap: 72px 24px;
+  max-width: ${config.gridItemSize * 6 + 120}px;
+  margin: 0 auto;
+}
+.demo-folder {
+  position: relative;
+  isolation: isolate;
+  width: min(100%, ${width});
+  aspect-ratio: ${aspect};
+  justify-self: center;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  perspective: 900px;
+}
+.demo-back,
+.demo-front,
+.demo-file {
+  position: absolute;
+  inset: 0;
+  border: ${config.folderBorderWidth}px solid rgb(from var(--accent) r g b / ${config.folderBorderOpacity});
+  border-radius: ${config.folderRadius}px;
+}
+.demo-back {
+  z-index: 1;
+  background: linear-gradient(145deg, var(--mid), var(--deep));
+  box-shadow: 0 18px ${config.cardShadowBlur}px rgb(0 0 0 / ${config.cardShadowOpacity});
+}
+.demo-tab {
+  position: absolute;
+  ${config.tabAlignment}: 0;
+  top: -${config.tabHeight}px;
+  width: ${config.tabWidth}%;
+  height: ${config.tabHeight}px;
+  background: ${config.tabFill === "color" ? config.tabColor : "linear-gradient(135deg, var(--accent), var(--mid))"};
+  border-radius: ${Math.min(config.folderRadius, 8)}px ${Math.min(config.folderRadius, 8)}px 0 0;
+}
+.demo-file {
+  z-index: calc(2 + var(--index));
+  overflow: hidden;
+  transform: var(--closed-transform);
+  transform-origin: bottom center;
+  background: var(--file-art);
+  box-shadow: 0 10px ${config.cardShadowBlur}px rgb(0 0 0 / ${config.cardShadowOpacity});
+  will-change: transform;
+}
+.demo-file::after {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 7px;
+  content: attr(data-label);
+  color: ${light ? "#242321" : "#f5f5f4"};
+  background: ${light ? "rgb(246 245 241 / .88)" : "rgb(10 10 11 / .88)"};
+}
+.demo-front {
+  z-index: 8;
+  overflow: hidden;
+  transform-origin: bottom center;
+  background: var(--cover-art);
+  box-shadow: inset 0 1px rgb(255 255 255 / .18), inset 0 -18px 28px rgb(0 0 0 / .32);
+  will-change: transform;
+}
+.demo-label {
+  position: absolute;
+  inset: auto -2px -2px;
+  padding: 9px;
+  color: ${light ? "#242321" : "#f5f5f4"};
+  background: ${light ? `rgb(246 245 241 / ${config.labelOpacity})` : `rgb(10 10 11 / ${config.labelOpacity})`};
+  backdrop-filter: blur(${config.labelBackdropBlur}px);
+}
+.demo-flash {
+  position: absolute;
+  z-index: 9;
+  inset: 0;
+  pointer-events: none;
+  background: white;
+  opacity: 0;
+}
+.standalone-folders[data-engine="css"] .demo-file,
+.standalone-folders[data-engine="css"] .demo-front {
+  transition: transform ${config.transitionCurve === "elastic" ? 0.72 : 0.48}s ${cssEase};
+}
+.standalone-folders[data-engine="css"] .demo-file {
+  transition-delay: calc(var(--index) * ${config.staggerDelay}s);
+}
+.standalone-folders[data-engine="css"] .demo-folder[data-open="true"] .demo-file {
+  transform: var(--open-transform);
+}
+.standalone-folders[data-engine="css"] .demo-folder[data-open="true"] .demo-front {
+  transform: translateY(-4px) rotateX(${config.coverTilt}deg) scale(.98);
+}
+.standalone-folders[data-engine="css"] .demo-folder[data-immediate="true"] > * {
+  transition-duration: 0s;
+}
+${
+  config.textureEnabled
+    ? `.demo-back::after, .demo-front::after, .demo-file::before {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  opacity: ${config.noiseOpacity * 0.18};
+  background-size: ${config.noiseScale}px ${config.noiseScale}px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E");
+}`
+    : ""
+}
+@media (prefers-reduced-motion: reduce) {
+  .demo-file, .demo-front { transition-duration: 0s !important; }
+}`;
+}
+
+/** Builds a complete single-file React demo from the current playground state. */
 export function buildPlaygroundSnippet(config: PlaygroundConfig): string {
-  const engine = ENGINE_CATALOG[config.animationEngine];
+  const palette = FOLDER_PALETTES[config.paletteId].colors;
+  const styles = standaloneStyles(config, palette);
+  const engineImport = standaloneEngineImport(config.animationEngine);
+  const engineAdapter = standaloneEngineAdapter(config.animationEngine);
+  const demoFolders = [
+    {
+      id: "signal",
+      title: "Signal Archive",
+      artwork: `linear-gradient(145deg, ${palette[0]}, ${palette[2]} 72%)`,
+    },
+    {
+      id: "field",
+      title: "Field Notes",
+      artwork: `linear-gradient(35deg, ${palette[2]}, ${palette[1]} 48%, ${palette[0]})`,
+    },
+    {
+      id: "motion",
+      title: "Motion Studies",
+      artwork: `radial-gradient(circle at 25% 20%, ${palette[0]}, ${palette[2]} 68%)`,
+    },
+  ];
 
-  return `// Illustrative ${engine.label} setup. Supply these project imports in your app.
-import type { CSSProperties } from "react";
-import StyleFolder from "./components/StyleFolder";
-import { STYLES_DATA } from "./data/stylesData";
-import { deploymentForKey } from "./types";
+  return `import { useRef } from "react";
+${engineImport}
 
-const animationEngine = ${quote(config.animationEngine)} as const;
-const deploymentMode = ${quote(config.deploymentMode)} as const;
-const playgroundStyle = {
-  "--noise-opacity": ${config.noiseOpacity},
-  "--noise-scale": "${config.noiseScale}px",
-  "--grid-item-min": "${config.gridItemSize}px",
-} as CSSProperties;
-const sharedConfig = {
-  orientation: ${quote(config.orientation)} as const,
-  springSettings: {
-    stiffness: ${config.springSettings.stiffness},
-    damping: ${config.springSettings.damping},
-    mass: ${config.springSettings.mass},
-  },
-  spacingMultiplier: ${config.spacingMultiplier},
-  visibleCardsCount: ${config.visibleCardsCount},
-  fanDirection: ${quote(config.fanDirection)} as const,
-  fanAngle: ${config.fanAngle},
-  coverTilt: ${config.coverTilt},
-  staggerDelay: ${config.staggerDelay},
-  clickBehavior: ${quote(config.clickBehavior)} as const,
-  transitionCurve: ${quote(config.transitionCurve)} as const,
-  folderShape: ${quote(config.folderShape)} as const,
-  cardStyle: ${quote(config.cardStyle)} as const,
-  gridItemSize: ${config.gridItemSize},
-  compact: true,
-  textureEnabled: ${config.textureEnabled},
-  tabFill: ${quote(config.tabFill)} as const,
-  tabColor: ${quote(config.tabColor)},
-  tabWidth: ${config.tabWidth},
-  tabHeight: ${config.tabHeight},
-  tabAlignment: ${quote(config.tabAlignment)} as const,
-  labelVisible: ${config.labelVisible},
-  labelOpacity: ${config.labelOpacity},
-  labelBackdropBlur: ${config.labelBackdropBlur},
-  folderBorderWidth: ${config.folderBorderWidth},
-  folderBorderOpacity: ${config.folderBorderOpacity},
-  cardShadowBlur: ${config.cardShadowBlur},
-  cardShadowOpacity: ${config.cardShadowOpacity},
-  folderRadius: ${config.folderRadius},
-  paletteId: ${quote(config.paletteId)} as const,
-  visualSource: ${quote(config.visualSource)} as const,
-};
+const config = ${JSON.stringify(config, null, 2)};
+const palette = ${JSON.stringify(palette)};
+const folders = ${JSON.stringify(demoFolders, null, 2)};
+const deploymentStyles = [
+  "fan", "skew3d", "cascade", "scatter", "horizontal_stack",
+  "orbit", "staircase", "burst", "deck_split",
+];
+const motionDuration = config.transitionCurve === "elastic" ? 0.72 : config.transitionCurve === "bounce" ? 0.58 : 0.48;
 
-<div
-  data-theme=${quote(config.theme)}
-  data-texture-enabled={${config.textureEnabled}}
-  className="${config.theme === "light" ? "theme-light" : "theme-dark"} app-shell"
-  style={playgroundStyle}
->
-  <div className="folders-grid">
-    {STYLES_DATA.map((folder) => (
-      <StyleFolder
-        key={folder.id}
-        folder={folder}
-        animationEngine={animationEngine}
-        deploymentStyle={
-          deploymentMode === "random" ? deploymentForKey(folder.id) : deploymentMode
-        }
-        {...sharedConfig}
-      />
-    ))}
-  </div>
-</div>;`;
+function stableDeployment(key) {
+  let hash = 2166136261;
+  for (let index = 0; index < key.length; index += 1) {
+    hash ^= key.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return deploymentStyles[(hash >>> 0) % deploymentStyles.length];
+}
+
+function layoutFor(style, index, total) {
+  const center = (total - 1) / 2;
+  const offset = (index - center) * config.spacingMultiplier;
+  const direction = config.fanDirection === "left" ? -1 : config.fanDirection === "right" ? 1 : 0;
+  let x = offset * 28 + direction * index * 8;
+  let y = -18 - Math.abs(offset) * 7;
+  let rotation = offset * config.fanAngle;
+  let scale = 1;
+
+  if (style === "skew3d") { x *= 0.75; y -= index * 9; rotation += index * 3; scale -= index * 0.025; }
+  if (style === "cascade") { x = index * 18 - center * 18; y = -index * 13; rotation = 0; }
+  if (style === "scatter") { x = ((index * 37) % 90) - 45; y = -22 - ((index * 29) % 58); rotation = ((index * 17) % 24) - 12; }
+  if (style === "horizontal_stack") { x = offset * 38; y = -22; rotation = 0; }
+  if (style === "orbit") { const angle = (index / Math.max(total, 1)) * Math.PI * 2; x = Math.cos(angle) * 58; y = Math.sin(angle) * 30 - 38; rotation = angle * 8; }
+  if (style === "staircase") { x = offset * 26; y = -18 - index * 14; rotation = 0; }
+  if (style === "burst") { x = offset * 44; y = -28 - Math.abs(offset) * 16; rotation = offset * 10; }
+  if (style === "deck_split") { x = (index < total / 2 ? -1 : 1) * (22 + index * 9); y = -24 - (index % 2) * 16; rotation = (index < total / 2 ? -1 : 1) * 7; }
+
+  if (config.orientation === "horizontal") [x, y] = [y, x];
+  return { x, y, rotation, scale };
+}
+
+function transformFor(layout) {
+  return "translate(" + layout.x + "px, " + layout.y + "px) rotate(" + layout.rotation + "deg) scale(" + layout.scale + ")";
+}
+
+function coverTransform(open) {
+  return open
+    ? "translateY(-4px) rotateX(" + config.coverTilt + "deg) scale(.98)"
+    : "translateY(0) rotateX(0deg) scale(1)";
+}
+
+${engineAdapter}
+
+function DemoFolder({ folder }) {
+  const rootRef = useRef(null);
+  const lockedRef = useRef(false);
+  const style = config.deploymentMode === "random" ? stableDeployment(folder.id) : config.deploymentMode;
+  const files = Array.from({ length: config.visibleCardsCount }, (_, index) => index);
+
+  const setOpen = (open) => {
+    const root = rootRef.current;
+    if (!root) return;
+    root.dataset.open = String(open);
+    root.setAttribute("aria-expanded", String(open));
+    animateFolder(root, open);
+  };
+
+  const handleClick = () => {
+    const root = rootRef.current;
+    if (!root) return;
+    if (config.clickBehavior === "toggle") {
+      lockedRef.current = !lockedRef.current;
+      setOpen(lockedRef.current);
+      return;
+    }
+    const target = config.clickBehavior === "flash" ? root.querySelector(".demo-flash") : root;
+    const frames = config.clickBehavior === "flash"
+      ? [{ opacity: 0.28 }, { opacity: 0 }]
+      : [{ transform: "scale(.975)" }, { transform: "scale(1)" }];
+    target.animate(frames, { duration: 260, easing: "ease-out" });
+  };
+
+  return (
+    <button
+      ref={rootRef}
+      type="button"
+      className="demo-folder"
+      data-open="false"
+      aria-expanded="false"
+      aria-label={folder.title}
+      onPointerEnter={() => setOpen(true)}
+      onPointerLeave={() => !lockedRef.current && setOpen(false)}
+      onFocus={() => setOpen(true)}
+      onBlur={() => !lockedRef.current && setOpen(false)}
+      onClick={handleClick}
+    >
+      <span className="demo-back">
+        {config.cardStyle === "folder" && <span className="demo-tab" />}
+      </span>
+      {files.map((fileIndex) => {
+        const layout = layoutFor(style, fileIndex, files.length);
+        const openTransform = transformFor(layout);
+        const closedTransform = "translate(0, " + (10 + fileIndex * 2) + "px) scale(" + (0.9 + fileIndex * 0.015) + ")";
+        const art = config.visualSource === "image"
+          ? folder.artwork
+          : "linear-gradient(145deg, " + palette[fileIndex % palette.length] + ", " + palette[2] + ")";
+        return (
+          <span
+            key={fileIndex}
+            className="demo-file"
+            data-label={"FILE " + String(fileIndex + 1).padStart(2, "0")}
+            data-open-transform={openTransform}
+            data-closed-transform={closedTransform}
+            style={{
+              "--index": fileIndex,
+              "--open-transform": openTransform,
+              "--closed-transform": closedTransform,
+              "--file-art": art,
+            }}
+          />
+        );
+      })}
+      <span className="demo-front" style={{ "--cover-art": folder.artwork }}>
+        {config.labelVisible && <span className="demo-label">{folder.title}</span>}
+      </span>
+      <span className="demo-flash" />
+    </button>
+  );
+}
+
+const styles = \`${styles}\`;
+
+export default function FolderGridDemo() {
+  return (
+    <section className="standalone-folders" data-engine={config.animationEngine} data-theme={config.theme}>
+      <style>{styles}</style>
+      <div className="demo-grid">
+        {folders.map((folder) => <DemoFolder key={folder.id} folder={folder} />)}
+      </div>
+    </section>
+  );
+}`;
 }

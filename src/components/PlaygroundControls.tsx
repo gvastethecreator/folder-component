@@ -299,21 +299,32 @@ function RangeControl({
 
 function ControlSection({
   title,
+  description,
   children,
-  open = false,
+  defaultOpen = false,
   icon: Icon,
 }: {
   title: string;
+  description: string;
   children: ReactNode;
-  open?: boolean;
+  defaultOpen?: boolean;
   icon?: ControlIcon;
 }) {
+  const [open, setOpen] = useState(defaultOpen);
+
   return (
-    <details open={open} className="control-section">
+    <details
+      open={open}
+      className="control-section"
+      onToggle={(event) => setOpen(event.currentTarget.open)}
+    >
       <summary>
-        <span>
-          {Icon && <Icon size={13} stroke={1.7} aria-hidden />}
-          {title}
+        <span className="control-section-heading">
+          <span>
+            {Icon && <Icon size={13} stroke={1.7} aria-hidden />}
+            <span className="control-section-title">{title}</span>
+          </span>
+          <small>{description}</small>
         </span>
         <IconChevronDown size={13} stroke={1.7} aria-hidden />
       </summary>
@@ -467,6 +478,12 @@ export default function PlaygroundControls({
     paletteId,
     visualSource,
   } satisfies PlaygroundConfig);
+  const runtimeLabel =
+    animationEngine === "css"
+      ? "CSS only"
+      : animationEngine === "waapi"
+        ? "Browser WAAPI"
+        : engine.label;
 
   const copyCode = async () => {
     try {
@@ -580,37 +597,141 @@ export default function PlaygroundControls({
           id="controls-panel"
           role="tabpanel"
           aria-labelledby="controls-tab"
-          className="custom-scrollbar min-h-0 flex-1 overflow-y-auto px-3"
+          className="controls-panel custom-scrollbar min-h-0 flex-1 overflow-y-auto px-3"
         >
-          <section className="deployment-picker" aria-labelledby="deployment-picker-title">
-            <div className="deployment-picker-heading">
-              <h3 id="deployment-picker-title">Expansion layout</h3>
-              <span>Whole grid</span>
-            </div>
-            <div role="group" aria-label="Expansion layout">
-              <button
-                type="button"
-                aria-pressed={deploymentMode === "random"}
-                onClick={() => setDeploymentMode("random")}
-              >
-                <DeploymentPreview layout="random" />
-                <span>Random</span>
-              </button>
-              {FOLDER_DEPLOYMENTS.map((deployment) => (
+          <ControlSection
+            title="Grid & expansion"
+            description="Layout, density, and stack geometry"
+            icon={IconGeometry}
+            defaultOpen
+          >
+            <section className="deployment-picker" aria-labelledby="deployment-picker-title">
+              <div className="deployment-picker-heading">
+                <h3 id="deployment-picker-title">Expansion layout</h3>
+                <span>Whole grid</span>
+              </div>
+              <div role="group" aria-label="Expansion layout">
                 <button
-                  key={deployment}
                   type="button"
-                  aria-pressed={deploymentMode === deployment}
-                  onClick={() => setDeploymentMode(deployment)}
+                  aria-pressed={deploymentMode === "random"}
+                  onClick={() => setDeploymentMode("random")}
                 >
-                  <DeploymentPreview layout={deployment} />
-                  <span>{FOLDER_DEPLOYMENT_LABELS[deployment]}</span>
+                  <DeploymentPreview layout="random" />
+                  <span>Random</span>
                 </button>
-              ))}
-            </div>
-          </section>
+                {FOLDER_DEPLOYMENTS.map((deployment) => (
+                  <button
+                    key={deployment}
+                    type="button"
+                    aria-pressed={deploymentMode === deployment}
+                    onClick={() => setDeploymentMode(deployment)}
+                  >
+                    <DeploymentPreview layout={deployment} />
+                    <span>{FOLDER_DEPLOYMENT_LABELS[deployment]}</span>
+                  </button>
+                ))}
+              </div>
+            </section>
 
-          <ControlSection title="Animation engine" icon={IconPlayerPlay} open>
+            <SegmentControl
+              label="Folder shape"
+              value={folderShape}
+              onChange={setFolderShape}
+              options={[
+                { value: "vertical", label: "Portrait", icon: IconRectangleVertical },
+                { value: "square", label: "Square", icon: IconSquare },
+                { value: "horizontal", label: "Wide", icon: IconRectangle },
+              ]}
+            />
+
+            <div className="control-pair-grid">
+              <RangeControl
+                id="grid-item-size"
+                label="Grid density"
+                icon={IconColumns3}
+                value={gridItemSize}
+                display={`${gridItemSize}px`}
+                min={96}
+                max={200}
+                step={4}
+                onChange={setGridItemSize}
+              />
+              <RangeControl
+                id="visible-cards"
+                label="Visible cards"
+                icon={IconCards}
+                value={visibleCardsCount}
+                min={1}
+                max={5}
+                step={1}
+                onChange={setVisibleCardsCount}
+              />
+            </div>
+
+            <div className="control-pair-grid">
+              <SegmentControl
+                label="Axis"
+                value={orientation}
+                onChange={setOrientation}
+                options={[
+                  { value: "vertical", label: "Vertical", icon: IconArrowsVertical },
+                  { value: "horizontal", label: "Horizontal", icon: IconArrowsHorizontal },
+                ]}
+              />
+              <SegmentControl
+                label="Direction"
+                value={fanDirection}
+                onChange={setFanDirection}
+                options={[
+                  { value: "left", label: "Left", icon: IconAlignLeft },
+                  { value: "symmetrical", label: "Center", icon: IconSpacingHorizontal },
+                  { value: "right", label: "Right", icon: IconAlignRight },
+                ]}
+              />
+            </div>
+
+            <div className="control-pair-grid">
+              <RangeControl
+                id="spacing"
+                label="Spacing"
+                icon={IconSpacingHorizontal}
+                value={spacingMultiplier}
+                display={`${spacingMultiplier.toFixed(2)}×`}
+                min={0.55}
+                max={1.45}
+                step={0.05}
+                onChange={setSpacingMultiplier}
+              />
+              <RangeControl
+                id="fan-angle"
+                label="Fan angle"
+                icon={IconWaveSine}
+                value={fanAngle}
+                display={`${fanAngle}°`}
+                min={0}
+                max={16}
+                step={1}
+                onChange={setFanAngle}
+              />
+            </div>
+            <RangeControl
+              id="cover-tilt"
+              label="Cover depth"
+              icon={IconTiltShift}
+              value={coverTilt}
+              display={`${Math.abs(coverTilt)}°`}
+              min={-24}
+              max={0}
+              step={1}
+              onChange={setCoverTilt}
+            />
+          </ControlSection>
+
+          <ControlSection
+            title="Animation & interaction"
+            description="Engine, timing, and input response"
+            icon={IconPlayerPlay}
+          >
             <SegmentControl
               label="Engine"
               value={animationEngine}
@@ -622,16 +743,111 @@ export default function PlaygroundControls({
                 icon: ENGINE_ICONS[id],
               }))}
             />
-            <p className="engine-description" aria-live="polite">
-              {engine.description}
+            <div className="engine-summary" aria-live="polite">
+              <p className="engine-description">{engine.description}</p>
+              <p className="engine-capability">{engine.springCapability}</p>
+            </div>
+            <div className="control-pair-grid">
+              <SegmentControl
+                label="Curve"
+                value={transitionCurve}
+                onChange={setTransitionCurve}
+                className="curve-selector"
+                options={[
+                  { value: "spring", label: "Spring", icon: IconActivity },
+                  { value: "tween", label: "Tween", icon: IconWaveSine },
+                  { value: "bounce", label: "Bounce", icon: IconStack2 },
+                  { value: "elastic", label: "Elastic", icon: IconArrowsMaximize },
+                ]}
+              />
+              <SegmentControl
+                label="Click behavior"
+                value={clickBehavior}
+                onChange={setClickBehavior}
+                className="click-selector"
+                options={[
+                  { value: "pulse", label: "Pulse", icon: IconPointer },
+                  { value: "toggle", label: "Lock", icon: IconLock },
+                  { value: "flash", label: "Flash", icon: IconSparkles },
+                ]}
+              />
+            </div>
+            <RangeControl
+              id="stagger"
+              label="Stagger"
+              icon={IconClock}
+              value={staggerDelay}
+              display={`${Math.round(staggerDelay * 1000)}ms`}
+              min={0}
+              max={0.12}
+              step={0.005}
+              onChange={setStaggerDelay}
+            />
+            <p
+              id="spring-physics-note"
+              className={`engine-capability ${physicsDisabled ? "" : "sr-only"}`}
+              role={physicsDisabled ? "status" : undefined}
+            >
+              {physicsDisabled
+                ? `${transitionCurve[0].toUpperCase()}${transitionCurve.slice(1)} uses a tuned timing profile. Spring physics controls are preserved and disabled until Spring is selected.`
+                : engine.springCapability}
             </p>
-            <p className="engine-capability" aria-live="polite">
-              {engine.springCapability}
-            </p>
+            <fieldset
+              className="spring-controls-grid"
+              disabled={physicsDisabled}
+              aria-describedby="spring-physics-note"
+            >
+              <legend className="control-subheading">Spring physics</legend>
+              <RangeControl
+                id="stiffness"
+                label="Stiffness"
+                icon={IconWeight}
+                value={springSettings.stiffness}
+                min={60}
+                max={360}
+                step={5}
+                disabled={physicsDisabled}
+                describedBy="spring-physics-note"
+                onChange={(value) =>
+                  setSpringSettings((current) => ({ ...current, stiffness: value }))
+                }
+              />
+              <RangeControl
+                id="damping"
+                label="Damping"
+                icon={IconWaveSine}
+                value={springSettings.damping}
+                min={6}
+                max={32}
+                step={1}
+                disabled={physicsDisabled}
+                describedBy="spring-physics-note"
+                onChange={(value) =>
+                  setSpringSettings((current) => ({ ...current, damping: value }))
+                }
+              />
+              <RangeControl
+                id="mass"
+                label="Mass"
+                icon={IconWeight}
+                value={springSettings.mass}
+                display={springSettings.mass.toFixed(2)}
+                min={0.4}
+                max={2}
+                step={0.05}
+                disabled={physicsDisabled}
+                describedBy="spring-physics-note"
+                onChange={(value) => setSpringSettings((current) => ({ ...current, mass: value }))}
+              />
+            </fieldset>
           </ControlSection>
 
-          <ControlSection title="Appearance" icon={IconPalette} open>
-            <div className="grid grid-cols-2 gap-2">
+          <ControlSection
+            title="Folder design"
+            description="Theme, artwork, palette, and tab"
+            icon={IconPalette}
+          >
+            <div className="control-pair-grid">
               <SegmentControl
                 label="Theme"
                 value={theme}
@@ -651,29 +867,6 @@ export default function PlaygroundControls({
                 ]}
               />
             </div>
-
-            <SegmentControl
-              label="Shape"
-              value={folderShape}
-              onChange={setFolderShape}
-              options={[
-                { value: "vertical", label: "Portrait", icon: IconRectangleVertical },
-                { value: "square", label: "Square", icon: IconSquare },
-                { value: "horizontal", label: "Wide", icon: IconRectangle },
-              ]}
-            />
-
-            <RangeControl
-              id="grid-item-size"
-              label="Grid density"
-              icon={IconColumns3}
-              value={gridItemSize}
-              display={`${gridItemSize}px · auto`}
-              min={96}
-              max={200}
-              step={4}
-              onChange={setGridItemSize}
-            />
 
             <fieldset className="palette-control">
               <legend className="control-kicker">Palette</legend>
@@ -701,9 +894,9 @@ export default function PlaygroundControls({
               </div>
             </fieldset>
 
-            <div className="grid grid-cols-2 gap-2">
+            <div className="control-pair-grid">
               <SegmentControl
-                label="Cover"
+                label="Cover style"
                 value={cardStyle}
                 onChange={setCardStyle}
                 options={[
@@ -711,20 +904,7 @@ export default function PlaygroundControls({
                   { value: "classic", label: "Clean", icon: IconSquare },
                 ]}
               />
-              <SegmentControl
-                label="Click"
-                value={clickBehavior}
-                onChange={setClickBehavior}
-                options={[
-                  { value: "pulse", label: "Pulse", icon: IconPointer },
-                  { value: "toggle", label: "Lock", icon: IconLock },
-                  { value: "flash", label: "Flash", icon: IconSparkles },
-                ]}
-              />
-            </div>
-
-            {cardStyle === "folder" && (
-              <div className="grid grid-cols-[1fr_auto] items-end gap-2">
+              {cardStyle === "folder" && (
                 <SegmentControl
                   label="Tab fill"
                   value={tabFill}
@@ -734,19 +914,23 @@ export default function PlaygroundControls({
                     { value: "color", label: "Color", icon: IconColorSwatch },
                   ]}
                 />
-                {tabFill === "color" && (
-                  <label className="color-control">
-                    <span className="sr-only">Folder tab color</span>
-                    <input
-                      type="color"
-                      aria-label="Folder tab color"
-                      value={tabColor}
-                      onChange={(event) => setTabColor(event.target.value)}
-                    />
-                    <span>{tabColor}</span>
-                  </label>
-                )}
-              </div>
+              )}
+            </div>
+
+            {cardStyle === "folder" && tabFill === "color" && (
+              <label className="color-control">
+                <span className="control-label">
+                  <IconColorSwatch size={12} stroke={1.7} aria-hidden />
+                  Tab color
+                </span>
+                <input
+                  type="color"
+                  aria-label="Folder tab color"
+                  value={tabColor}
+                  onChange={(event) => setTabColor(event.target.value)}
+                />
+                <span>{tabColor}</span>
+              </label>
             )}
 
             {cardStyle === "folder" && (
@@ -760,7 +944,7 @@ export default function PlaygroundControls({
                     { value: "right", label: "Right", icon: IconAlignRight },
                   ]}
                 />
-                <div className="grid grid-cols-2 gap-3">
+                <div className="control-pair-grid">
                   <RangeControl
                     id="tab-width"
                     label="Tab width"
@@ -786,7 +970,13 @@ export default function PlaygroundControls({
                 </div>
               </>
             )}
+          </ControlSection>
 
+          <ControlSection
+            title="Surface & label"
+            description="Text, border, shadow, and grain"
+            icon={IconAdjustmentsHorizontal}
+          >
             <button
               type="button"
               role="switch"
@@ -811,7 +1001,7 @@ export default function PlaygroundControls({
             </button>
 
             {labelVisible && (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="control-pair-grid">
                 <RangeControl
                   id="label-opacity"
                   label="Label opacity"
@@ -837,7 +1027,7 @@ export default function PlaygroundControls({
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="control-pair-grid">
               <RangeControl
                 id="border-width"
                 label="Border size"
@@ -861,7 +1051,7 @@ export default function PlaygroundControls({
                 onChange={setFolderBorderOpacity}
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="control-pair-grid">
               <RangeControl
                 id="card-shadow-blur"
                 label="Shadow blur"
@@ -917,7 +1107,7 @@ export default function PlaygroundControls({
             </button>
 
             {textureEnabled && (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="control-pair-grid">
                 <RangeControl
                   id="noise-opacity"
                   label="Noise intensity"
@@ -942,153 +1132,6 @@ export default function PlaygroundControls({
                 />
               </div>
             )}
-
-            <RangeControl
-              id="visible-cards"
-              label="Visible cards"
-              icon={IconCards}
-              value={visibleCardsCount}
-              min={1}
-              max={5}
-              step={1}
-              onChange={setVisibleCardsCount}
-            />
-          </ControlSection>
-
-          <ControlSection title="Geometry" icon={IconGeometry} open>
-            <div className="grid grid-cols-2 gap-2">
-              <SegmentControl
-                label="Axis"
-                value={orientation}
-                onChange={setOrientation}
-                options={[
-                  { value: "vertical", label: "Vertical", icon: IconArrowsVertical },
-                  { value: "horizontal", label: "Horizontal", icon: IconArrowsHorizontal },
-                ]}
-              />
-              <SegmentControl
-                label="Direction"
-                value={fanDirection}
-                onChange={setFanDirection}
-                options={[
-                  { value: "left", label: "Left", icon: IconAlignLeft },
-                  { value: "symmetrical", label: "Center", icon: IconSpacingHorizontal },
-                  { value: "right", label: "Right", icon: IconAlignRight },
-                ]}
-              />
-            </div>
-            <RangeControl
-              id="spacing"
-              label="Spacing"
-              icon={IconSpacingHorizontal}
-              value={spacingMultiplier}
-              display={`${spacingMultiplier.toFixed(2)}×`}
-              min={0.55}
-              max={1.45}
-              step={0.05}
-              onChange={setSpacingMultiplier}
-            />
-            <RangeControl
-              id="fan-angle"
-              label="Fan angle"
-              icon={IconWaveSine}
-              value={fanAngle}
-              display={`${fanAngle}°`}
-              min={0}
-              max={16}
-              step={1}
-              onChange={setFanAngle}
-            />
-            <RangeControl
-              id="cover-tilt"
-              label="Cover depth"
-              icon={IconTiltShift}
-              value={coverTilt}
-              display={`${Math.abs(coverTilt)}`}
-              min={-24}
-              max={0}
-              step={1}
-              onChange={setCoverTilt}
-            />
-          </ControlSection>
-
-          <ControlSection title="Motion" icon={IconActivity}>
-            <SegmentControl
-              label="Curve"
-              value={transitionCurve}
-              onChange={setTransitionCurve}
-              className="curve-selector"
-              options={[
-                { value: "spring", label: "Spring", icon: IconActivity },
-                { value: "tween", label: "Tween", icon: IconWaveSine },
-                { value: "bounce", label: "Bounce", icon: IconStack2 },
-                { value: "elastic", label: "Elastic", icon: IconArrowsMaximize },
-              ]}
-            />
-            <RangeControl
-              id="stagger"
-              label="Stagger"
-              icon={IconClock}
-              value={staggerDelay}
-              display={`${Math.round(staggerDelay * 1000)}ms`}
-              min={0}
-              max={0.12}
-              step={0.005}
-              onChange={setStaggerDelay}
-            />
-            <p
-              id="spring-physics-note"
-              className={`engine-capability ${physicsDisabled ? "" : "sr-only"}`}
-              role={physicsDisabled ? "status" : undefined}
-            >
-              {physicsDisabled
-                ? `${transitionCurve[0].toUpperCase()}${transitionCurve.slice(1)} uses a tuned timing profile. Spring physics controls are preserved and disabled until Spring is selected.`
-                : engine.springCapability}
-            </p>
-            <fieldset disabled={physicsDisabled} aria-describedby="spring-physics-note">
-              <legend className="sr-only">Spring physics controls</legend>
-              <RangeControl
-                id="stiffness"
-                label="Stiffness"
-                icon={IconWeight}
-                value={springSettings.stiffness}
-                min={60}
-                max={360}
-                step={5}
-                disabled={physicsDisabled}
-                describedBy="spring-physics-note"
-                onChange={(value) =>
-                  setSpringSettings((current) => ({ ...current, stiffness: value }))
-                }
-              />
-              <RangeControl
-                id="damping"
-                label="Damping"
-                icon={IconWaveSine}
-                value={springSettings.damping}
-                min={6}
-                max={32}
-                step={1}
-                disabled={physicsDisabled}
-                describedBy="spring-physics-note"
-                onChange={(value) =>
-                  setSpringSettings((current) => ({ ...current, damping: value }))
-                }
-              />
-              <RangeControl
-                id="mass"
-                label="Mass"
-                icon={IconWeight}
-                value={springSettings.mass}
-                display={springSettings.mass.toFixed(2)}
-                min={0.4}
-                max={2}
-                step={0.05}
-                disabled={physicsDisabled}
-                describedBy="spring-physics-note"
-                onChange={(value) => setSpringSettings((current) => ({ ...current, mass: value }))}
-              />
-            </fieldset>
           </ControlSection>
         </div>
       ) : (
@@ -1096,12 +1139,12 @@ export default function PlaygroundControls({
           id="code-panel"
           role="tabpanel"
           aria-labelledby="code-tab"
-          className="code-panel custom-scrollbar min-h-0 flex-1 overflow-y-auto p-3"
+          className="code-panel custom-scrollbar min-h-0 flex-1 overflow-y-auto"
         >
           <div className="code-panel-header">
             <div>
-              <h3>Grid usage</h3>
-              <p>Random or fixed deployment, shared across every animation engine.</p>
+              <h3>Standalone component</h3>
+              <p>Single-file React demo with inline styles and data. No project-local imports.</p>
             </div>
             <button type="button" onClick={copyCode} aria-label="Copy reusable code">
               {copied ? (
@@ -1112,7 +1155,12 @@ export default function PlaygroundControls({
               {copied ? "Copied" : "Copy"}
             </button>
           </div>
-          <pre className="custom-scrollbar">
+          <div className="code-panel-meta" aria-label="Generated code status">
+            <span>Live config</span>
+            <span>{runtimeLabel}</span>
+            <span>{codeSnippet.split("\n").length} lines</span>
+          </div>
+          <pre className="code-output" aria-label="Generated standalone code">
             <code>{codeSnippet}</code>
           </pre>
         </div>
