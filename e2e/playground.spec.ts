@@ -154,6 +154,80 @@ test.describe("animation engines and interaction", () => {
   });
 });
 
+test.describe("preview modes", () => {
+  test("browses one full-size folder with shared controls and responsive layout", async ({
+    page,
+  }) => {
+    test.setTimeout(90_000);
+    await openPlayground(page);
+    await page.getByRole("button", { name: "Single", exact: true }).click();
+
+    const preview = page.getByRole("region", { name: "Single folder preview" });
+    const folder = preview.locator(folderSelector);
+    const folderSelect = page.getByRole("combobox", { name: "Preview folder" });
+    await expect(page.locator("#folders-grid")).toHaveCount(0);
+    await expect(folder).toHaveCount(1);
+    await expect(folder).not.toHaveClass(/folder-compact/);
+    await expect(folderSelect.locator("option")).toHaveCount(20);
+
+    await openControlSection(page, "Folder design");
+    await page
+      .getByRole("group", { name: "Folder shape" })
+      .getByRole("button", { name: "Win 11" })
+      .click();
+    await setRange(page, "Cover blur", 8);
+    await expect(folder).toHaveAttribute("data-folder-shape", "windows11");
+    await expect(folder.locator(".folder-cover-image")).toHaveCSS("filter", "blur(8px)");
+    const desktopFolderBox = await folder.boundingBox();
+    const desktopPreviewBox = await preview.boundingBox();
+    expect(desktopFolderBox?.width ?? 0).toBeGreaterThanOrEqual(480);
+    expect((desktopFolderBox?.width ?? 0) / (desktopPreviewBox?.width ?? 1)).toBeGreaterThanOrEqual(
+      0.55,
+    );
+    expect((desktopFolderBox?.width ?? 0) / (desktopPreviewBox?.width ?? 1)).toBeLessThanOrEqual(
+      0.65,
+    );
+
+    await folderSelect.selectOption("7");
+    await expect(folderSelect).toHaveValue("7");
+    await page.getByRole("button", { name: "Next folder" }).click();
+    await expect(folderSelect).toHaveValue("8");
+    await page.getByRole("button", { name: "Previous folder" }).click();
+    await expect(folderSelect).toHaveValue("7");
+
+    await openControlSection(page, "Animation & interaction");
+    await page
+      .getByRole("group", { name: "Engine" })
+      .getByRole("button", { name: "WAAPI", exact: true })
+      .click();
+    await expect(folder).toHaveAttribute("data-animation-engine", "waapi");
+    const card = folder.locator(".file-card").first();
+    const collapsedTransform = await card.evaluate(
+      (element) => getComputedStyle(element).transform,
+    );
+    await folder.hover();
+    await expect(folder).toHaveAttribute("aria-expanded", "true");
+    await expect
+      .poll(() => card.evaluate((element) => getComputedStyle(element).transform))
+      .not.toBe(collapsedTransform);
+    await page.screenshot({ path: "test-results/visual-proof-single-preview.png" });
+    await page.mouse.move(1, 1);
+    await expect(folder).toHaveAttribute("aria-expanded", "false");
+    await page.screenshot({ path: "test-results/visual-proof-single-preview-closed.png" });
+
+    for (const width of [390, 320]) {
+      await page.setViewportSize({ width, height: 844 });
+      await preview.scrollIntoViewIfNeeded();
+      await expect
+        .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))
+        .toBe(true);
+      const box = await folder.boundingBox();
+      expect(box?.width ?? Number.POSITIVE_INFINITY).toBeLessThanOrEqual(width - 24);
+    }
+    await page.screenshot({ path: "test-results/visual-proof-single-preview-mobile.png" });
+  });
+});
+
 test.describe("playground controls", () => {
   test("renders the Windows 11 silhouette and isolates cover opacity and blur", async ({
     page,

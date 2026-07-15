@@ -145,6 +145,160 @@ input[type="color"] {
   color: var(--text-tertiary) !important;
 }
 
+.gallery-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.preview-mode-switch {
+  display: inline-grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  overflow: hidden;
+  border: 1px solid var(--border-default);
+  border-radius: 0.4rem;
+  background: var(--surface-1);
+}
+
+.preview-mode-switch button {
+  display: inline-flex;
+  min-height: 1.8rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.55rem;
+  border: 0;
+  border-right: 1px solid var(--border-default);
+  background: transparent;
+  color: var(--text-tertiary);
+  font-size: 0.6rem;
+  cursor: pointer;
+}
+
+.preview-mode-switch button:last-child {
+  border-right: 0;
+}
+
+.preview-mode-switch button:hover {
+  color: var(--text-primary);
+  background: var(--surface-2);
+}
+
+.preview-mode-switch button[aria-pressed="true"] {
+  color: var(--text-primary);
+  background: var(--surface-3);
+}
+
+.preview-mode-switch button:focus-visible,
+.single-folder-toolbar button:focus-visible,
+.single-folder-toolbar select:focus-visible {
+  position: relative;
+  z-index: 1;
+  outline: 1px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+.single-folder-preview {
+  display: flex;
+  width: 100%;
+  min-height: 32rem;
+  flex: 1;
+  flex-direction: column;
+  padding-top: 1rem;
+}
+
+.single-folder-toolbar {
+  display: grid;
+  width: min(100%, 30rem);
+  grid-template-columns: auto auto minmax(10rem, 1fr) auto;
+  align-items: center;
+  gap: 0.45rem;
+  margin-inline: auto;
+  padding: 0.35rem;
+  border: 1px solid var(--border-default);
+  border-radius: 0.5rem;
+  background: var(--surface-1);
+}
+
+.single-folder-toolbar label {
+  padding-left: 0.25rem;
+  color: var(--text-tertiary);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.single-folder-toolbar button,
+.single-folder-toolbar select {
+  min-height: 2rem;
+  border: 1px solid var(--border-default);
+  border-radius: 0.35rem;
+  background: var(--surface-2);
+  color: var(--text-primary);
+}
+
+.single-folder-toolbar button {
+  display: grid;
+  width: 2rem;
+  place-items: center;
+  padding: 0;
+  cursor: pointer;
+}
+
+.single-folder-toolbar button:hover {
+  border-color: var(--border-hover);
+  background: var(--surface-3);
+}
+
+.single-folder-toolbar select {
+  width: 100%;
+  padding-inline: 0.55rem 1.75rem;
+  font-size: 0.68rem;
+}
+
+.single-folder-canvas {
+  position: relative;
+  display: grid;
+  min-height: 30rem;
+  flex: 1;
+  place-items: center;
+  isolation: isolate;
+  padding: 5.5rem 1rem 2.5rem;
+}
+
+.single-folder-canvas::before {
+  position: absolute;
+  z-index: -1;
+  width: min(64vw, 38rem);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(255 255 255 / 0.035), transparent 68%);
+  content: "";
+  pointer-events: none;
+}
+
+.single-folder-canvas .style-folder {
+  width: min(60%, 42rem);
+  height: auto;
+  flex: none;
+}
+
+.single-folder-canvas .style-folder[data-folder-shape="vertical"] {
+  width: min(44%, 30rem, 46vh);
+  aspect-ratio: 9 / 13;
+}
+
+.single-folder-canvas .style-folder[data-folder-shape="square"] {
+  width: min(60%, 36rem, 60vh);
+  aspect-ratio: 1;
+}
+
+.single-folder-canvas .style-folder[data-folder-shape="horizontal"] {
+  aspect-ratio: 7 / 5;
+}
+
 .folders-grid {
   --grid-gap: 1rem;
   display: grid;
@@ -173,6 +327,43 @@ input[type="color"] {
 
 .style-folder[data-folder-shape="windows11"] {
   aspect-ratio: 224 / 176;
+}
+
+@media (max-width: 639px) {
+  .gallery-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .gallery-header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .single-folder-toolbar {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .single-folder-toolbar label {
+    display: none;
+  }
+
+  .single-folder-canvas {
+    min-height: 28rem;
+    padding: 7rem 0 5rem;
+  }
+
+  .single-folder-canvas .style-folder {
+    width: min(100%, 20rem);
+  }
+
+  .single-folder-canvas .style-folder[data-folder-shape="vertical"] {
+    width: min(100%, 18rem);
+  }
+
+  .single-folder-canvas .style-folder[data-folder-shape="square"] {
+    width: min(100%, 20rem);
+  }
 }
 
 ::selection {

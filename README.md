@@ -9,6 +9,7 @@ component: **GSAP**, **Motion**, **Anime.js**, pure **CSS**, and native **WAAPI*
 
 - Switch animation engines without changing folder geometry or content.
 - Browse 20 curated folders with a different cover image on every folder.
+- Toggle between the responsive grid and a full-size single-folder preview with collection browsing.
 - Randomize the grid or force one of nine expansion layouts across every folder.
 - Scale a responsive 1–9 column grid through one folder-size/density control.
 - Switch between classic, diagonal, rounded, and Windows 11 folder silhouettes.
@@ -55,7 +56,7 @@ variables. Pexels imagery is used under the [Pexels license](https://www.pexels.
 
 ## Status
 
-- Release-candidate checks cover 97 unit tests and 21 Chromium end-to-end scenarios.
+- Release-candidate checks cover 98 unit tests and 22 Chromium end-to-end scenarios.
 - Firefox, Safari, and manual screen-reader testing are not part of the automated baseline.
 - All five animation adapters are intentionally bundled together for instant comparison.
 

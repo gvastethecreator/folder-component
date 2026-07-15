@@ -1,5 +1,6 @@
-import { useReducer } from "react";
+import { useReducer, useState } from "react";
 import type { CSSProperties } from "react";
+import { IconChevronLeft, IconChevronRight, IconFolder, IconLayoutGrid } from "@tabler/icons-react";
 import { STYLES_DATA } from "./data/stylesData";
 import { ENGINE_CATALOG } from "./animation/engineCatalog";
 import StyleFolder from "./components/StyleFolder";
@@ -19,6 +20,8 @@ import {
 } from "./types";
 
 export default function App() {
+  const [previewMode, setPreviewMode] = useState<"grid" | "single">("grid");
+  const [previewFolderIndex, setPreviewFolderIndex] = useState(0);
   const [config, dispatch] = useReducer(
     playgroundConfigReducer,
     undefined,
@@ -74,6 +77,53 @@ export default function App() {
   } = config;
   const engine = ENGINE_CATALOG[animationEngine];
   const activePresetId = getMatchingDesignPreset(config);
+  const previewFolder = STYLES_DATA[previewFolderIndex];
+  const movePreview = (offset: number) => {
+    setPreviewFolderIndex(
+      (current) => (current + offset + STYLES_DATA.length) % STYLES_DATA.length,
+    );
+  };
+  const renderFolder = (folder: (typeof STYLES_DATA)[number], index: number, compact: boolean) => (
+    <StyleFolder
+      key={`${compact ? "grid" : "single"}-${folder.id}`}
+      folder={folder}
+      orientation={orientation}
+      springSettings={springSettings}
+      spacingMultiplier={spacingMultiplier}
+      visibleCardsCount={visibleCardsCount}
+      fanDirection={fanDirection}
+      fanAngle={fanAngle}
+      coverTilt={coverTilt}
+      deploymentStyle={deploymentMode === "random" ? deploymentForKey(folder.id) : deploymentMode}
+      staggerDelay={staggerDelay}
+      clickBehavior={clickBehavior}
+      transitionCurve={transitionCurve}
+      folderShape={folderShape}
+      cardStyle={cardStyle}
+      gridItemSize={gridItemSize}
+      priority={!compact || index < 2}
+      compact={compact}
+      textureEnabled={textureEnabled}
+      tabFill={tabFill}
+      tabColor={tabColor}
+      tabWidth={tabWidth}
+      tabHeight={tabHeight}
+      tabAlignment={tabAlignment}
+      labelVisible={labelVisible}
+      labelOpacity={labelOpacity}
+      labelBackdropBlur={labelBackdropBlur}
+      folderBorderWidth={folderBorderWidth}
+      folderBorderOpacity={folderBorderOpacity}
+      cardShadowBlur={cardShadowBlur}
+      cardShadowOpacity={cardShadowOpacity}
+      folderRadius={folderRadius}
+      paletteId={paletteId}
+      visualSource={visualSource}
+      coverImageOpacity={coverImageOpacity}
+      coverImageBlur={coverImageBlur}
+      animationEngine={animationEngine}
+    />
+  );
 
   return (
     <div
@@ -172,7 +222,7 @@ export default function App() {
 
         {/* LEFT CONTAINER: INTERACTIVE CARD GRID */}
         <div className="order-last lg:order-first w-full h-full flex flex-col justify-start p-4 sm:p-6 lg:p-8 min-h-0 lg:overflow-y-auto custom-scrollbar">
-          <header className="gallery-header flex items-center justify-between border-b border-neutral-800 px-1 pb-3">
+          <header className="gallery-header flex items-center justify-between gap-3 border-b border-neutral-800 px-1 pb-3">
             <div>
               <h1 className="text-sm font-semibold tracking-tight text-neutral-100">
                 Folder Motion Lab
@@ -181,67 +231,83 @@ export default function App() {
                 {engine.statusLabel} · shared rendering controls
               </p>
             </div>
-            <div className="flex items-center gap-2 font-mono text-[9px] tabular-nums text-neutral-500">
-              <span>{STYLES_DATA.length} ITEMS</span>
-              <span aria-hidden="true">/</span>
-              <span>{engine.statusLabel}</span>
+            <div className="gallery-header-actions">
+              <div className="preview-mode-switch" role="group" aria-label="Preview mode">
+                <button
+                  type="button"
+                  aria-pressed={previewMode === "grid"}
+                  onClick={() => setPreviewMode("grid")}
+                >
+                  <IconLayoutGrid size={13} stroke={1.7} aria-hidden="true" />
+                  Grid
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={previewMode === "single"}
+                  onClick={() => setPreviewMode("single")}
+                >
+                  <IconFolder size={13} stroke={1.7} aria-hidden="true" />
+                  Single
+                </button>
+              </div>
+              <div className="gallery-status flex items-center gap-2 font-mono text-[9px] tabular-nums text-neutral-500">
+                <span>
+                  {previewMode === "grid"
+                    ? `${STYLES_DATA.length} ITEMS`
+                    : `${String(previewFolderIndex + 1).padStart(2, "0")} / ${STYLES_DATA.length}`}
+                </span>
+                <span aria-hidden="true">/</span>
+                <span>{engine.statusLabel}</span>
+              </div>
             </div>
           </header>
-          {/* FOLDERS GRID CONTAINER */}
-          <div
-            id="folders-grid"
-            data-grid-size={gridItemSize}
-            className="folders-grid justify-items-center py-16 xl:pt-28 xl:pb-16 px-2 sm:px-4"
-            style={
-              {
-                "--grid-item-min": `${gridItemSize}px`,
-              } as CSSProperties
-            }
-          >
-            {STYLES_DATA.map((folder, index) => (
-              <StyleFolder
-                key={folder.id}
-                folder={folder}
-                orientation={orientation}
-                springSettings={springSettings}
-                spacingMultiplier={spacingMultiplier}
-                visibleCardsCount={visibleCardsCount}
-                fanDirection={fanDirection}
-                fanAngle={fanAngle}
-                coverTilt={coverTilt}
-                deploymentStyle={
-                  deploymentMode === "random" ? deploymentForKey(folder.id) : deploymentMode
-                }
-                staggerDelay={staggerDelay}
-                clickBehavior={clickBehavior}
-                transitionCurve={transitionCurve}
-                folderShape={folderShape}
-                cardStyle={cardStyle}
-                gridItemSize={gridItemSize}
-                priority={index < 2}
-                compact
-                textureEnabled={textureEnabled}
-                tabFill={tabFill}
-                tabColor={tabColor}
-                tabWidth={tabWidth}
-                tabHeight={tabHeight}
-                tabAlignment={tabAlignment}
-                labelVisible={labelVisible}
-                labelOpacity={labelOpacity}
-                labelBackdropBlur={labelBackdropBlur}
-                folderBorderWidth={folderBorderWidth}
-                folderBorderOpacity={folderBorderOpacity}
-                cardShadowBlur={cardShadowBlur}
-                cardShadowOpacity={cardShadowOpacity}
-                folderRadius={folderRadius}
-                paletteId={paletteId}
-                visualSource={visualSource}
-                coverImageOpacity={coverImageOpacity}
-                coverImageBlur={coverImageBlur}
-                animationEngine={animationEngine}
-              />
-            ))}
-          </div>
+          {previewMode === "grid" ? (
+            <div
+              id="folders-grid"
+              data-grid-size={gridItemSize}
+              data-preview-mode="grid"
+              className="folders-grid justify-items-center py-16 xl:pt-28 xl:pb-16 px-2 sm:px-4"
+              style={
+                {
+                  "--grid-item-min": `${gridItemSize}px`,
+                } as CSSProperties
+              }
+            >
+              {STYLES_DATA.map((folder, index) => renderFolder(folder, index, true))}
+            </div>
+          ) : (
+            <section
+              id="single-folder-preview"
+              className="single-folder-preview"
+              data-preview-mode="single"
+              aria-label="Single folder preview"
+            >
+              <nav className="single-folder-toolbar" aria-label="Folder browser">
+                <button type="button" onClick={() => movePreview(-1)} aria-label="Previous folder">
+                  <IconChevronLeft size={15} stroke={1.7} aria-hidden="true" />
+                </button>
+                <label htmlFor="preview-folder-select">Folder</label>
+                <select
+                  id="preview-folder-select"
+                  aria-label="Preview folder"
+                  value={previewFolderIndex}
+                  onChange={(event) => setPreviewFolderIndex(Number(event.target.value))}
+                >
+                  {STYLES_DATA.map((folder, index) => (
+                    <option key={folder.id} value={index}>
+                      {folder.title}
+                    </option>
+                  ))}
+                </select>
+                <button type="button" onClick={() => movePreview(1)} aria-label="Next folder">
+                  <IconChevronRight size={15} stroke={1.7} aria-hidden="true" />
+                </button>
+              </nav>
+              <div className="single-folder-canvas">
+                {renderFolder(previewFolder, previewFolderIndex, false)}
+              </div>
+            </section>
+          )}
         </div>
       </main>
     </div>
