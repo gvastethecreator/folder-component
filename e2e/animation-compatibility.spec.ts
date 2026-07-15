@@ -15,6 +15,15 @@ const layouts = [
 
 const folderSelector = '[role="button"][data-animation-engine]';
 
+async function settleReactFrame(page: Page) {
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+      }),
+  );
+}
+
 async function openSection(page: Page, title: string) {
   const section = page
     .locator(".control-section")
@@ -25,21 +34,25 @@ async function openSection(page: Page, title: string) {
 }
 
 async function setRange(page: Page, name: string, value: number) {
-  await page.getByRole("slider", { name }).evaluate((element, nextValue) => {
+  const slider = page.getByRole("slider", { name });
+  await slider.evaluate((element, nextValue) => {
     const input = element as HTMLInputElement;
     const valueSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
     valueSetter?.call(input, String(nextValue));
     input.dispatchEvent(new Event("input", { bubbles: true }));
     input.dispatchEvent(new Event("change", { bubbles: true }));
   }, value);
-  await page.waitForTimeout(20);
+  await expect(slider).toHaveValue(String(value));
+  await settleReactFrame(page);
 }
 
 async function selectSegment(page: Page, group: string, option: string) {
-  await page
+  const button = page
     .getByRole("group", { name: group })
-    .getByRole("button", { name: option, exact: true })
-    .click();
+    .getByRole("button", { name: option, exact: true });
+  await button.click();
+  await expect(button).toHaveAttribute("aria-pressed", "true");
+  await settleReactFrame(page);
 }
 
 async function transformSignature(cards: Locator) {
@@ -58,7 +71,7 @@ async function transformSignature(cards: Locator) {
 
 test.describe("animation compatibility matrix", () => {
   test("every explicit stack responds to every shared geometry control", async ({ page }) => {
-    test.setTimeout(90_000);
+    test.setTimeout(120_000);
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/");
     await openSection(page, "Animation & interaction");
@@ -124,7 +137,7 @@ test.describe("animation compatibility matrix", () => {
   });
 
   test("all engines render the same open geometry for every stack", async ({ page }) => {
-    test.setTimeout(90_000);
+    test.setTimeout(120_000);
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/");
     await openSection(page, "Animation & interaction");
@@ -155,7 +168,7 @@ test.describe("animation compatibility matrix", () => {
   test("every engine survives live geometry changes and rapid toggle interruption", async ({
     page,
   }) => {
-    test.setTimeout(90_000);
+    test.setTimeout(180_000);
     const consoleErrors: string[] = [];
     const pageErrors: string[] = [];
     page.on("console", (message) => {
@@ -289,7 +302,20 @@ test.describe("animation compatibility matrix", () => {
     for (const engine of engines) {
       await selectSegment(page, "Engine", engine);
 
-      if (engine !== "CSS") {
+      if (engine === "CSS") {
+        await flash.evaluate((element) => {
+          const flashElement = element as HTMLElement;
+          flashElement.dataset.observedClass = "false";
+          const observer = new MutationObserver(() => {
+            if (flashElement.classList.contains("is-css-flashing")) {
+              flashElement.dataset.observedClass = "true";
+              observer.disconnect();
+            }
+          });
+          observer.observe(flashElement, { attributes: true, attributeFilter: ["class"] });
+          window.setTimeout(() => observer.disconnect(), 2_000);
+        });
+      } else {
         await flash.evaluate((element) => {
           const flashElement = element as HTMLElement;
           flashElement.dataset.observedVisible = "false";
@@ -308,7 +334,7 @@ test.describe("animation compatibility matrix", () => {
       await folder.click();
 
       if (engine === "CSS") {
-        await expect(flash).toHaveClass(/is-css-flashing/);
+        await expect(flash).toHaveAttribute("data-observed-class", "true");
       } else {
         await expect(flash, `${engine} flash feedback`).toHaveAttribute(
           "data-observed-visible",

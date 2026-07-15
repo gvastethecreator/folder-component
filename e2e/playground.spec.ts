@@ -53,6 +53,7 @@ async function openControlSection(page: Page, title: string) {
 
 test.describe("animation engines and interaction", () => {
   test("switches all five engine labels and folder markers", async ({ page }) => {
+    test.setTimeout(60_000);
     await openPlayground(page);
     await openControlSection(page, "Animation & interaction");
     const engineGroup = page.getByRole("group", { name: "Engine" });
@@ -154,6 +155,117 @@ test.describe("animation engines and interaction", () => {
 });
 
 test.describe("playground controls", () => {
+  test("renders the Windows 11 silhouette and isolates cover opacity and blur", async ({
+    page,
+  }) => {
+    test.setTimeout(60_000);
+    await openPlayground(page);
+    await openControlSection(page, "Folder design");
+    await openControlSection(page, "Surface & label");
+
+    const shapeGroup = page.getByRole("group", { name: "Folder shape" });
+    await shapeGroup.getByRole("button", { name: "Win 11" }).click();
+    await expect(page.locator('[data-folder-shape="windows11"]')).toHaveCount(20);
+    await shapeGroup.screenshot({ path: "test-results/visual-proof-windows11-shape-control.png" });
+
+    const folder = page.locator(folderSelector).first();
+    const front = folder.locator(".folder-front");
+    const cover = front.locator(".folder-cover-image");
+    const label = front.locator(".folder-label");
+    const frontOutline = folder.locator(".windows11-folder-outline-front path");
+
+    await expect
+      .poll(() =>
+        folder.evaluate((element) => {
+          const rect = element.getBoundingClientRect();
+          return Number((rect.width / rect.height).toFixed(3));
+        }),
+      )
+      .toBe(Number((224 / 176).toFixed(3)));
+    await expect
+      .poll(() => front.evaluate((element) => getComputedStyle(element).clipPath))
+      .toContain("windows11-folder-front");
+    await expect(folder.locator(".windows11-folder-outline")).toHaveCount(2);
+    const frontClipPath = folder.locator('clipPath[id^="windows11-folder-front"] path');
+    const defaultFrontPath = await frontClipPath.getAttribute("d");
+    await folder.scrollIntoViewIfNeeded();
+    await folder.screenshot({ path: "test-results/visual-proof-windows11-reference-shape.png" });
+
+    await setRange(page, "Tab width", 66);
+    await setRange(page, "Tab height", 18);
+    await setRange(page, "Corner radius", 18);
+    await setRange(page, "Cover opacity", 0.45);
+    await setRange(page, "Cover blur", 10);
+    await setRange(page, "Border size", 2);
+    await expect(folder).toHaveCSS("--folder-cover-image-opacity", "0.45");
+    await expect(folder).toHaveCSS("--folder-cover-image-blur", "10px");
+    await expect(cover).toHaveCSS("opacity", "0.45");
+    await expect(cover).toHaveCSS("filter", "blur(10px)");
+    await expect(label).toHaveCSS("filter", "none");
+    await expect(frontOutline).toHaveCSS("stroke-width", "4px");
+    await expect.poll(() => frontClipPath.getAttribute("d")).not.toBe(defaultFrontPath);
+
+    await page
+      .getByRole("group", { name: "Tab alignment" })
+      .getByRole("button", { name: "Right" })
+      .click();
+    await expect(frontClipPath).toHaveAttribute("transform", /matrix\(-0\.004464/);
+
+    await folder.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: "test-results/visual-proof-windows11-cover-effects.png" });
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect
+      .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))
+      .toBe(true);
+    await folder.scrollIntoViewIfNeeded();
+    await page.screenshot({ path: "test-results/visual-proof-windows11-mobile.png" });
+  });
+
+  test("keeps the customized Windows 11 silhouette functional across all engines", async ({
+    page,
+  }) => {
+    test.setTimeout(60_000);
+    await openPlayground(page);
+    await openControlSection(page, "Folder design");
+    await page
+      .getByRole("group", { name: "Folder shape" })
+      .getByRole("button", { name: "Win 11" })
+      .click();
+    await setRange(page, "Tab width", 66);
+    await setRange(page, "Cover opacity", 0.45);
+    await setRange(page, "Cover blur", 10);
+
+    const folder = page.locator(folderSelector).first();
+    const card = folder.locator(".file-card").first();
+    const frontPath = folder.locator('clipPath[id^="windows11-folder-front"] path');
+    const customizedPath = await frontPath.getAttribute("d");
+
+    await openControlSection(page, "Animation & interaction");
+    const engineGroup = page.getByRole("group", { name: "Engine" });
+    for (const [engineLabel] of engines) {
+      await engineGroup.getByRole("button", { name: engineLabel, exact: true }).click();
+      const collapsedTransform = await card.evaluate(
+        (element) => getComputedStyle(element).transform,
+      );
+      await folder.hover();
+      await expect(folder).toHaveAttribute("aria-expanded", "true");
+      await expect
+        .poll(() => card.evaluate((element) => getComputedStyle(element).transform))
+        .not.toBe(collapsedTransform);
+      if (engineLabel === "GSAP") {
+        await page.screenshot({ path: "test-results/visual-proof-windows11-open.png" });
+      }
+      await page.mouse.move(1, 1);
+      await expect(folder).toHaveAttribute("aria-expanded", "false");
+    }
+
+    await expect(frontPath).toHaveAttribute("d", customizedPath ?? "");
+    await expect(folder.locator(".folder-cover-image")).toHaveCSS("filter", "blur(10px)");
+    await expect(folder.locator(".folder-cover-image")).toHaveCSS("opacity", "0.45");
+  });
+
   test("uses one front clip and configurable shadows for the stacked cards", async ({ page }) => {
     const consoleErrors: string[] = [];
     const pageErrors: string[] = [];

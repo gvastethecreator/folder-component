@@ -171,6 +171,10 @@ input[type="color"] {
   aspect-ratio: 7 / 5;
 }
 
+.style-folder[data-folder-shape="windows11"] {
+  aspect-ratio: 224 / 176;
+}
+
 ::selection {
   background-color: var(--surface-inverted);
   color: var(--text-inverted);
@@ -1200,6 +1204,67 @@ input[type="range"]::-moz-range-thumb:hover {
   );
 }
 
+.folder-shape-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.style-folder[data-folder-shape="windows11"] .folder-back {
+  border-width: 0;
+  border-radius: 0;
+  box-shadow: none;
+  clip-path: var(--windows11-folder-back-clip);
+  filter: drop-shadow(
+    0 var(--folder-card-shadow-offset) var(--folder-card-shadow-blur)
+      rgb(var(--folder-shadow-rgb) / var(--folder-card-shadow-opacity))
+  );
+}
+
+.style-folder[data-folder-shape="windows11"][data-card-style] .folder-front {
+  border-width: 0;
+  border-radius: 0;
+  clip-path: var(--windows11-folder-front-clip);
+}
+
+.windows11-folder-outline {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.windows11-folder-outline-back {
+  z-index: 6;
+}
+
+.windows11-folder-outline-front {
+  z-index: 6;
+}
+
+.windows11-folder-outline path {
+  fill: none;
+  stroke-linejoin: round;
+  stroke-width: var(--folder-border-width);
+}
+
+.windows11-folder-outline-back path {
+  stroke: color-mix(in srgb, var(--folder-palette-mid) var(--folder-border-opacity), transparent);
+}
+
+.windows11-folder-outline-front path {
+  stroke-width: calc(var(--folder-border-width) * 2);
+  stroke: color-mix(
+    in srgb,
+    var(--folder-palette-accent) var(--folder-border-opacity),
+    transparent
+  );
+}
+
 .style-folder .file-card {
   border-radius: var(--folder-inner-radius);
   box-shadow: 0 var(--folder-card-shadow-offset) var(--folder-card-shadow-blur)
@@ -1280,6 +1345,22 @@ input[type="range"]::-moz-range-thumb:hover {
   clip-path: polygon(18% 0, 100% 0, 100% 100%, 0 100%);
 }
 
+.style-folder[data-folder-shape="windows11"] .folder-tab {
+  top: 0;
+  height: var(--folder-tab-height);
+  border-radius: var(--folder-radius) var(--folder-radius) 0 0;
+  clip-path: none;
+}
+
+.style-folder[data-folder-shape="windows11"] .folder-tab-content {
+  border-radius: inherit;
+  clip-path: none;
+}
+
+.style-folder[data-folder-shape="windows11"] .folder-back-meta {
+  top: 18%;
+}
+
 .style-folder .folder-front::before,
 .style-folder .folder-back::before,
 .style-folder .file-card::before {
@@ -1315,6 +1396,13 @@ input[type="range"]::-moz-range-thumb:hover {
 .style-folder .file-card > :is(img, [data-image-state]) {
   position: relative;
   z-index: 0;
+}
+
+.style-folder .folder-cover-image {
+  opacity: var(--folder-cover-image-opacity);
+  filter: blur(var(--folder-cover-image-blur));
+  transform: scale(var(--folder-cover-image-scale));
+  transform-origin: center;
 }
 
 .style-folder .folder-back-meta,

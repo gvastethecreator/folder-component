@@ -80,7 +80,7 @@ export type Orientation = "horizontal" | "vertical";
 export type FanDirection = "symmetrical" | "left" | "right";
 export type ClickBehavior = "pulse" | "toggle" | "flash";
 export type TransitionCurve = "spring" | "tween" | "bounce" | "elastic";
-export type FolderShape = "vertical" | "square" | "horizontal";
+export type FolderShape = "vertical" | "square" | "horizontal" | "windows11";
 export type CardStyle = "classic" | "folder";
 export type Theme = "dark" | "light";
 export type TabFill = "color" | "image";
@@ -123,6 +123,8 @@ export interface PlaygroundConfig {
   folderRadius: number;
   paletteId: PaletteId;
   visualSource: VisualSource;
+  coverImageOpacity: number;
+  coverImageBlur: number;
 }
 
 /** Public default contract used by the playground reset action and snippets. */
@@ -165,6 +167,8 @@ export const DEFAULT_PLAYGROUND_CONFIG: PlaygroundConfig = {
   folderRadius: 12,
   paletteId: "graphite",
   visualSource: "image",
+  coverImageOpacity: 1,
+  coverImageBlur: 0,
 };
 
 export function createDefaultPlaygroundConfig(): PlaygroundConfig {

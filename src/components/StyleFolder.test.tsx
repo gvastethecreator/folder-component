@@ -2,6 +2,10 @@ import { describe, it, expect, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import StyleFolder from "./StyleFolder";
 import { STYLES_DATA } from "../data/stylesData";
+import {
+  WINDOWS11_FOLDER_BACK_PATH,
+  WINDOWS11_FOLDER_FRONT_PATH,
+} from "../config/folderShapeGeometry";
 import type { SpringSettings } from "../types";
 
 const springSettings: SpringSettings = { stiffness: 185, damping: 14, mass: 1.0 };
@@ -183,6 +187,42 @@ describe("StyleFolder", () => {
       boxShadow: expect.stringContaining("var(--folder-card-shadow-opacity)"),
     });
     expect(container.querySelector(".folder-label")).not.toBeInTheDocument();
+  });
+
+  it("renders the supplied Windows 11 silhouette and isolated cover effects", () => {
+    const folder = STYLES_DATA[0];
+    const { container } = render(
+      <StyleFolder
+        folder={folder}
+        {...baseProps}
+        folderShape="windows11"
+        tabAlignment="right"
+        coverImageOpacity={0.55}
+        coverImageBlur={9}
+        folderBorderWidth={2}
+      />,
+    );
+    const button = screen.getByRole("button", { name: new RegExp(folder.title, "i") });
+    const cover = screen.getByAltText(folder.title);
+
+    expect(button).toHaveAttribute("data-folder-shape", "windows11");
+    expect(button).toHaveStyle({
+      "--folder-cover-image-opacity": "0.55",
+      "--folder-cover-image-blur": "9px",
+    });
+    expect(button.style.getPropertyValue("--windows11-folder-back-clip")).toContain(
+      "windows11-folder-back",
+    );
+    expect(button.style.getPropertyValue("--windows11-folder-front-clip")).toContain(
+      "windows11-folder-front",
+    );
+    expect(cover).toHaveClass("folder-cover-image");
+    expect(container.querySelectorAll(".windows11-folder-outline")).toHaveLength(2);
+    expect(container.querySelector(`path[d="${WINDOWS11_FOLDER_BACK_PATH}"]`)).toBeInTheDocument();
+    expect(container.querySelector(`path[d="${WINDOWS11_FOLDER_FRONT_PATH}"]`)).toBeInTheDocument();
+    expect(container.querySelector(".folder-label")).toContainElement(
+      screen.getByText(folder.title),
+    );
   });
 
   it("replaces every failed remote image with an inspectable neutral fallback", () => {

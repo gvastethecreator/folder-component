@@ -87,7 +87,7 @@ describe("App", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "GSAP" }));
     expect(document.querySelectorAll('[data-animation-engine="gsap"]')).toHaveLength(20);
-  }, 10_000);
+  }, 20_000);
 
   it("maps all five engine labels, statuses, and descriptions from one catalog", () => {
     render(<App />);
@@ -115,6 +115,8 @@ describe("App", () => {
     expect(snippet).toContain('"folderBorderWidth": 0');
     expect(snippet).toContain('"cardShadowBlur": 18');
     expect(snippet).toContain('"cardShadowOpacity": 0.22');
+    expect(snippet).toContain('"coverImageOpacity": 1');
+    expect(snippet).toContain('"coverImageBlur": 0');
     expect(snippet).toContain("export default function FolderGridDemo");
     expect(snippet).toContain("element.animate(");
     expect(snippet).toContain("x *= config.spacingMultiplier");
@@ -126,6 +128,28 @@ describe("App", () => {
     expect(snippet).not.toContain("StyleFolder");
     await expect(
       transformWithOxc(snippet, "standalone-folder.jsx", { lang: "jsx" }),
+    ).resolves.toBeDefined();
+  });
+
+  it("exports the Windows 11 silhouette and isolated cover effects", async () => {
+    const snippet = buildPlaygroundSnippet({
+      ...createDefaultPlaygroundConfig(),
+      folderShape: "windows11",
+      tabAlignment: "right",
+      coverImageOpacity: 0.45,
+      coverImageBlur: 11,
+    });
+
+    expect(snippet).toContain('"folderShape": "windows11"');
+    expect(snippet).toContain('"coverImageOpacity": 0.45');
+    expect(snippet).toContain('"coverImageBlur": 11');
+    expect(snippet).toContain('clipPath id="demo-windows11-back"');
+    expect(snippet).toContain('clipPath id="demo-windows11-front"');
+    expect(snippet).toContain("matrix(-1 0 0 1 224 0)");
+    expect(snippet).toContain("opacity: 0.45");
+    expect(snippet).toContain("filter: blur(11px)");
+    await expect(
+      transformWithOxc(snippet, "standalone-windows11.jsx", { lang: "jsx" }),
     ).resolves.toBeDefined();
   });
 

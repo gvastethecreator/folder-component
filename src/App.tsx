@@ -69,6 +69,8 @@ export default function App() {
     folderRadius,
     paletteId,
     visualSource,
+    coverImageOpacity,
+    coverImageBlur,
   } = config;
   const engine = ENGINE_CATALOG[animationEngine];
   const activePresetId = getMatchingDesignPreset(config);
@@ -159,6 +161,10 @@ export default function App() {
             setPaletteId={(value) => setConfigValue("paletteId", value)}
             visualSource={visualSource}
             setVisualSource={(value) => setConfigValue("visualSource", value)}
+            coverImageOpacity={coverImageOpacity}
+            setCoverImageOpacity={(value) => setConfigValue("coverImageOpacity", value)}
+            coverImageBlur={coverImageBlur}
+            setCoverImageBlur={(value) => setConfigValue("coverImageBlur", value)}
             onReset={handleReset}
             onApplyPreset={handleApplyPreset}
           />
@@ -230,6 +236,8 @@ export default function App() {
                 folderRadius={folderRadius}
                 paletteId={paletteId}
                 visualSource={visualSource}
+                coverImageOpacity={coverImageOpacity}
+                coverImageBlur={coverImageBlur}
                 animationEngine={animationEngine}
               />
             ))}

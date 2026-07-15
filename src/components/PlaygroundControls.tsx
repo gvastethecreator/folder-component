@@ -172,6 +172,10 @@ interface PlaygroundControlsProps {
   setPaletteId: Dispatch<SetStateAction<PaletteId>>;
   visualSource: VisualSource;
   setVisualSource: Dispatch<SetStateAction<VisualSource>>;
+  coverImageOpacity: number;
+  setCoverImageOpacity: Dispatch<SetStateAction<number>>;
+  coverImageBlur: number;
+  setCoverImageBlur: Dispatch<SetStateAction<number>>;
   onReset: () => void;
   onApplyPreset: (presetId: DesignPresetId) => void;
 }
@@ -423,6 +427,10 @@ export default function PlaygroundControls({
   setPaletteId,
   visualSource,
   setVisualSource,
+  coverImageOpacity,
+  setCoverImageOpacity,
+  coverImageBlur,
+  setCoverImageBlur,
   onReset,
   onApplyPreset,
 }: PlaygroundControlsProps) {
@@ -477,6 +485,8 @@ export default function PlaygroundControls({
     folderRadius,
     paletteId,
     visualSource,
+    coverImageOpacity,
+    coverImageBlur,
   } satisfies PlaygroundConfig);
   const runtimeLabel =
     animationEngine === "css"
@@ -641,6 +651,7 @@ export default function PlaygroundControls({
                 { value: "vertical", label: "Portrait", icon: IconRectangleVertical },
                 { value: "square", label: "Square", icon: IconSquare },
                 { value: "horizontal", label: "Wide", icon: IconRectangle },
+                { value: "windows11", label: "Win 11", icon: IconFolder },
               ]}
             />
 
@@ -867,6 +878,33 @@ export default function PlaygroundControls({
                 ]}
               />
             </div>
+
+            {visualSource === "image" && (
+              <div className="control-pair-grid">
+                <RangeControl
+                  id="cover-image-opacity"
+                  label="Cover opacity"
+                  icon={IconDropletHalf}
+                  value={coverImageOpacity}
+                  display={`${Math.round(coverImageOpacity * 100)}%`}
+                  min={0}
+                  max={1}
+                  step={0.05}
+                  onChange={setCoverImageOpacity}
+                />
+                <RangeControl
+                  id="cover-image-blur"
+                  label="Cover blur"
+                  icon={IconBlur}
+                  value={coverImageBlur}
+                  display={`${coverImageBlur}px`}
+                  min={0}
+                  max={24}
+                  step={1}
+                  onChange={setCoverImageBlur}
+                />
+              </div>
+            )}
 
             <fieldset className="palette-control">
               <legend className="control-kicker">Palette</legend>
