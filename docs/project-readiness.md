@@ -1,6 +1,6 @@
 # Project Readiness
 
-Current local baseline: 2026-07-14.
+Current local baseline: 2026-07-15.
 
 ## Release gates
 
@@ -9,8 +9,8 @@ Current local baseline: 2026-07-14.
 | Type safety           | `bun run typecheck`    | Required                                   |
 | Lint                  | `bun run lint`         | Required                                   |
 | Format                | `bun run format:check` | Required                                   |
-| Unit behavior         | `bun run test`         | 97 tests                                   |
-| Chromium flows        | `bun run test:e2e`     | 21 scenarios                               |
+| Unit behavior         | `bun run test`         | 98 tests                                   |
+| Chromium flows        | `bun run test:e2e`     | 22 scenarios                               |
 | Production artifact   | `bun run build`        | Required                                   |
 | GitHub Pages artifact | `bun run build:pages`  | Required                                   |
 | Dependency audit      | `bun audit`            | Required; production findings must be zero |
@@ -20,6 +20,9 @@ random and fixed deployments, responsive 320/390/1440/2560 layouts, density chan
 border geometry, active-folder stacking, label visibility/opacity/backdrop/clip, configurable SVG
 noise, image fallbacks, and reduced motion. Green E2E runs emit viewport and active-folder
 screenshots under `test-results/`; CI uploads them with the Playwright diagnostics artifact.
+
+Preview coverage verifies the Grid / Single switch, full collection navigation, shared shape and
+cover controls, WAAPI interaction, full-size rendering, and 320/390 px no-overflow layouts.
 
 The browser baseline also verifies the Windows 11 silhouette at its reference geometry and after
 tab/radius customization, left/right mirroring, border coherence, isolated cover opacity/blur,

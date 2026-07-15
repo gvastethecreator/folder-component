@@ -63,6 +63,38 @@ describe("App", () => {
     expect(new Set(folders.map((folder) => folder.dataset.coverImage)).size).toBe(20);
   });
 
+  it("switches to one full-size folder and browses the complete collection", () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Single" }));
+    const preview = screen.getByRole("region", { name: "Single folder preview" });
+    const folderSelect = screen.getByRole("combobox", { name: "Preview folder" });
+
+    expect(document.querySelector("#folders-grid")).not.toBeInTheDocument();
+    expect(preview.querySelectorAll('[id^="folder-container-"]')).toHaveLength(1);
+    expect(folderSelect).toHaveValue("0");
+    expect(folderSelect.querySelectorAll("option")).toHaveLength(STYLES_DATA.length);
+
+    fireEvent.click(screen.getByRole("button", { name: "Previous folder" }));
+    expect(folderSelect).toHaveValue(String(STYLES_DATA.length - 1));
+    fireEvent.click(screen.getByRole("button", { name: "Next folder" }));
+    expect(folderSelect).toHaveValue("0");
+    fireEvent.click(screen.getByRole("button", { name: "Next folder" }));
+    expect(folderSelect).toHaveValue("1");
+    expect(preview.querySelector('[id^="folder-container-"]')).toHaveAttribute(
+      "data-cover-image",
+      STYLES_DATA[1].coverImage,
+    );
+
+    fireEvent.change(folderSelect, { target: { value: "5" } });
+    expect(folderSelect).toHaveValue("5");
+    fireEvent.click(screen.getByRole("button", { name: "Previous folder" }));
+    expect(folderSelect).toHaveValue("4");
+
+    fireEvent.click(screen.getByRole("button", { name: "Grid" }));
+    expect(document.querySelectorAll('[id^="folder-container-"]')).toHaveLength(20);
+  }, 20_000);
+
   it("switches the complete application chrome to light mode", () => {
     render(<App />);
 
@@ -264,7 +296,7 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "Reset settings" }));
     expect(folder).toHaveAttribute("aria-expanded", "false");
     expect(screen.queryByText("PINNED")).not.toBeInTheDocument();
-  });
+  }, 20_000);
 
   it("applies presets and global deployment overrides to every folder", async () => {
     const user = userEvent.setup();

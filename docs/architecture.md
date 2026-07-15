@@ -43,6 +43,11 @@ uses an auto-fit grid capped at nine columns. The density control changes the mi
 320 px resolves to one column, 390 px to two, and ultrawide viewports to at most nine without
 horizontal overflow.
 
+`App.tsx` also owns a playground-only Grid / Single preview mode. Single mode reuses the same
+`StyleFolder` rendering path at full size and adds previous, next, and direct collection navigation.
+It is intentionally excluded from `PlaygroundConfig`, presets, and generated code because it
+changes only the playground viewport, not the exported component contract.
+
 Folder chrome is driven by CSS custom properties emitted by `StyleFolder`: tab width/height,
 left/right alignment, matched outer/inner radii, border width/opacity, palette, and label glass.
 App-level custom properties control SVG noise intensity/scale and grid density.
