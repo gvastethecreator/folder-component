@@ -11,8 +11,10 @@ component: **GSAP**, **Motion**, **Anime.js**, pure **CSS**, and native **WAAPI*
 - Browse 20 curated folders with a different cover image on every folder.
 - Randomize the grid or force one of nine expansion layouts across every folder.
 - Scale a responsive 1–9 column grid through one folder-size/density control.
+- Switch between classic, diagonal, rounded, and Windows 11 folder silhouettes.
 - Apply six color palettes or a custom color from the native picker.
-- Tune tab size/alignment, label glass, border weight/opacity/radius, and SVG noise.
+- Tune tab size/alignment, cover opacity/blur, label glass, border weight/opacity/radius, and SVG
+  noise.
 - Load complete design and behavior presets from the top dropdown.
 - Copy a live single-file React component from the Code panel; styles and demo data are embedded,
   with no project-local file imports.
@@ -53,7 +55,7 @@ variables. Pexels imagery is used under the [Pexels license](https://www.pexels.
 
 ## Status
 
-- Release-candidate checks cover 90 unit tests and 19 Chromium end-to-end scenarios.
+- Release-candidate checks cover 97 unit tests and 21 Chromium end-to-end scenarios.
 - Firefox, Safari, and manual screen-reader testing are not part of the automated baseline.
 - All five animation adapters are intentionally bundled together for instant comparison.
 

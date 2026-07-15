@@ -1,5 +1,11 @@
 import type { AnimationEngine, PlaygroundConfig } from "../types";
 import { FOLDER_PALETTES } from "../config/playgroundCatalog";
+import {
+  getWindows11ClipTransform,
+  getWindows11FolderPaths,
+  getWindows11OutlineTransform,
+  WINDOWS11_FOLDER_VIEWBOX,
+} from "../config/folderShapeGeometry";
 import { getGsapEase, getMotionDuration, getNativeEase, getSpringProfile } from "./animationTiming";
 
 export type SpringCapability = "native" | "approximation";
@@ -192,11 +198,21 @@ function animateFolder(root, open, immediate = false) {
 
 function standaloneStyles(config: PlaygroundConfig, palette: readonly string[]) {
   const light = config.theme === "light";
-  const width = config.folderShape === "horizontal" ? "180px" : `${config.gridItemSize}px`;
+  const wideShape = config.folderShape === "horizontal" || config.folderShape === "windows11";
+  const width = wideShape ? "180px" : `${config.gridItemSize}px`;
   const aspect =
-    config.folderShape === "vertical" ? "9 / 13" : config.folderShape === "square" ? "1" : "7 / 5";
+    config.folderShape === "vertical"
+      ? "9 / 13"
+      : config.folderShape === "square"
+        ? "1"
+        : config.folderShape === "windows11"
+          ? "224 / 176"
+          : "7 / 5";
   const cssEase = getNativeEase(config.transitionCurve, config.springSettings);
   const motionDuration = getMotionDuration(config.transitionCurve, config.springSettings);
+  const coverImageOpacity = config.visualSource === "image" ? config.coverImageOpacity : 1;
+  const coverImageBlur = config.visualSource === "image" ? config.coverImageBlur : 0;
+  const coverImageScale = 1 + Math.min(0.14, coverImageBlur / 160);
 
   return `.standalone-folders {
   --accent: ${palette[0]};
@@ -273,12 +289,24 @@ function standaloneStyles(config: PlaygroundConfig, palette: readonly string[]) 
   z-index: 8;
   overflow: hidden;
   transform-origin: bottom center;
-  background: var(--cover-art);
+  background: linear-gradient(145deg, var(--mid), var(--deep));
   box-shadow: inset 0 1px rgb(255 255 255 / .18), inset 0 -18px 28px rgb(0 0 0 / .32);
   will-change: transform;
 }
+.demo-front::before {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  content: "";
+  background: var(--cover-art) center / cover;
+  opacity: ${coverImageOpacity};
+  filter: blur(${coverImageBlur}px);
+  transform: scale(${coverImageScale});
+  transform-origin: center;
+}
 .demo-label {
   position: absolute;
+  z-index: 4;
   inset: auto -2px -2px;
   padding: 9px;
   color: ${light ? "#242321" : "#f5f5f4"};
@@ -292,6 +320,50 @@ function standaloneStyles(config: PlaygroundConfig, palette: readonly string[]) 
   pointer-events: none;
   background: white;
   opacity: 0;
+}
+.demo-shape-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+.demo-folder[data-shape="windows11"] .demo-back,
+.demo-folder[data-shape="windows11"] .demo-front {
+  border-width: 0;
+  border-radius: 0;
+}
+.demo-folder[data-shape="windows11"] .demo-back {
+  clip-path: url(#demo-windows11-back);
+  box-shadow: none;
+  filter: drop-shadow(0 8px ${config.cardShadowBlur}px rgb(0 0 0 / ${config.cardShadowOpacity}));
+}
+.demo-folder[data-shape="windows11"] .demo-front {
+  clip-path: url(#demo-windows11-front);
+}
+.demo-folder[data-shape="windows11"] .demo-tab {
+  top: 0;
+  height: ${config.tabHeight}px;
+  border-radius: ${config.folderRadius}px ${config.folderRadius}px 0 0;
+}
+.demo-shape-outline {
+  position: absolute;
+  z-index: 7;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.demo-shape-outline path {
+  fill: none;
+  stroke-width: ${config.folderBorderWidth * 2}px;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.demo-shape-outline-back path {
+  stroke: rgb(from var(--mid) r g b / ${config.folderBorderOpacity});
+}
+.demo-shape-outline-front path {
+  stroke: rgb(from var(--accent) r g b / ${config.folderBorderOpacity});
 }
 .standalone-folders[data-engine="css"] .demo-file,
 .standalone-folders[data-engine="css"] .demo-front {
@@ -337,6 +409,13 @@ export function buildPlaygroundSnippet(config: PlaygroundConfig): string {
   const styles = standaloneStyles(config, palette);
   const engineImport = standaloneEngineImport(config.animationEngine);
   const engineAdapter = standaloneEngineAdapter(config);
+  const windows11ClipTransform = getWindows11ClipTransform(config.tabAlignment);
+  const windows11OutlineTransform = getWindows11OutlineTransform(config.tabAlignment) ?? "";
+  const windows11Paths = getWindows11FolderPaths(
+    config.tabWidth,
+    config.tabHeight,
+    config.folderRadius,
+  );
   const demoFolders = [
     {
       id: "signal",
@@ -421,6 +500,23 @@ function orderedDelay(index, count, open) {
 
 ${engineAdapter}
 
+function FolderShapeDefs() {
+  if (config.folderShape !== "windows11") return null;
+
+  return (
+    <svg className="demo-shape-defs" aria-hidden="true" focusable="false">
+      <defs>
+        <clipPath id="demo-windows11-back" clipPathUnits="objectBoundingBox">
+          <path d=${quote(windows11Paths.back)} transform=${quote(windows11ClipTransform)} />
+        </clipPath>
+        <clipPath id="demo-windows11-front" clipPathUnits="objectBoundingBox">
+          <path d=${quote(windows11Paths.front)} transform=${quote(windows11ClipTransform)} />
+        </clipPath>
+      </defs>
+    </svg>
+  );
+}
+
 function DemoFolder({ folder }) {
   const rootRef = useRef(null);
   const lockedRef = useRef(false);
@@ -461,6 +557,7 @@ function DemoFolder({ folder }) {
       type="button"
       className="demo-folder"
       data-open="false"
+      data-shape={config.folderShape}
       aria-expanded="false"
       aria-label={folder.title}
       style={{ "--cover-art": coverArt }}
@@ -472,6 +569,11 @@ function DemoFolder({ folder }) {
     >
       <span className="demo-back">
         {config.cardStyle === "folder" && <span className="demo-tab" />}
+        {config.folderShape === "windows11" && (
+          <svg className="demo-shape-outline demo-shape-outline-back" viewBox=${quote(WINDOWS11_FOLDER_VIEWBOX)} preserveAspectRatio="none" aria-hidden="true">
+            <path d=${quote(windows11Paths.back)} transform=${quote(windows11OutlineTransform)} />
+          </svg>
+        )}
       </span>
       {files.map((fileIndex) => {
         const layout = layoutFor(style, fileIndex, files.length);
@@ -499,6 +601,11 @@ function DemoFolder({ folder }) {
       })}
       <span className="demo-front">
         {config.labelVisible && <span className="demo-label">{folder.title}</span>}
+        {config.folderShape === "windows11" && (
+          <svg className="demo-shape-outline demo-shape-outline-front" viewBox=${quote(WINDOWS11_FOLDER_VIEWBOX)} preserveAspectRatio="none" aria-hidden="true">
+            <path d=${quote(windows11Paths.front)} transform=${quote(windows11OutlineTransform)} />
+          </svg>
+        )}
       </span>
       <span className="demo-flash" />
     </button>
@@ -511,6 +618,7 @@ export default function FolderGridDemo() {
   return (
     <section className="standalone-folders" data-engine={config.animationEngine} data-theme={config.theme}>
       <style>{styles}</style>
+      <FolderShapeDefs />
       <div className="demo-grid">
         {folders.map((folder) => <DemoFolder key={folder.id} folder={folder} />)}
       </div>

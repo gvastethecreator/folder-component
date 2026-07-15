@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, useEffect, useId, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
@@ -11,10 +11,17 @@ import { getCollapsedTransforms, getExpandedTransforms } from "../animation/fold
 import { getMotionDuration } from "../animation/animationTiming";
 import ImageWithFallback, { neutralTone } from "./ImageWithFallback";
 import { FOLDER_PALETTES } from "../config/playgroundCatalog";
+import {
+  getWindows11ClipTransform,
+  getWindows11FolderPaths,
+  getWindows11OutlineTransform,
+  WINDOWS11_FOLDER_VIEWBOX,
+} from "../config/folderShapeGeometry";
 import type {
   AnimationEngine,
   DeploymentStyle,
   FolderData,
+  FolderShape,
   PaletteId,
   SpringSettings,
   TabAlignment,
@@ -48,7 +55,7 @@ interface StyleFolderProps {
   staggerDelay: number;
   clickBehavior: "pulse" | "toggle" | "flash";
   transitionCurve: TransitionCurve;
-  folderShape: "vertical" | "square" | "horizontal";
+  folderShape: FolderShape;
   cardStyle: "classic" | "folder";
   gridItemSize?: number;
   priority?: boolean;
@@ -69,6 +76,8 @@ interface StyleFolderProps {
   folderRadius?: number;
   paletteId?: PaletteId;
   visualSource?: "image" | "tone";
+  coverImageOpacity?: number;
+  coverImageBlur?: number;
   animationEngine?: AnimationEngine;
 }
 
@@ -123,8 +132,11 @@ function StyleFolder({
   folderRadius = 12,
   paletteId = "graphite",
   visualSource = "image",
+  coverImageOpacity = 1,
+  coverImageBlur = 0,
   animationEngine = "gsap",
 }: StyleFolderProps) {
+  const shapeInstanceId = useId().replaceAll(":", "");
   const rootRef = useRef<HTMLDivElement>(null);
   const frontRef = useRef<HTMLDivElement>(null);
   const flashRef = useRef<HTMLDivElement>(null);
@@ -145,6 +157,12 @@ function StyleFolder({
   isOpenRef.current = isOpen;
   const layoutScale = compact ? clamp(0.34, 0.72, gridItemSize / 288) : 1;
   const palette = FOLDER_PALETTES[paletteId];
+  const isWindows11Shape = folderShape === "windows11";
+  const windows11BackClipId = `windows11-folder-back-${shapeInstanceId}`;
+  const windows11FrontClipId = `windows11-folder-front-${shapeInstanceId}`;
+  const windows11ClipTransform = getWindows11ClipTransform(tabAlignment);
+  const windows11OutlineTransform = getWindows11OutlineTransform(tabAlignment);
+  const windows11Paths = getWindows11FolderPaths(tabWidth, tabHeight, folderRadius);
 
   useEffect(() => {
     if (isNearViewport || !supportsVisibilityDeferral || !rootRef.current) return;
@@ -292,11 +310,12 @@ function StyleFolder({
         vertical: "h-96 w-72",
         square: "h-72 w-72",
         horizontal: "h-56 w-80 sm:h-64 sm:w-96",
+        windows11: "w-80",
       }[folderShape];
 
   const imageSizes = compact
     ? `${gridItemSize}px`
-    : folderShape === "horizontal"
+    : folderShape === "horizontal" || folderShape === "windows11"
       ? "384px"
       : "288px";
 
@@ -336,6 +355,11 @@ function StyleFolder({
           "--folder-card-shadow-opacity": cardShadowOpacity,
           "--folder-tab-width": `${tabWidth}%`,
           "--folder-tab-height": `${tabHeight}px`,
+          "--folder-cover-image-opacity": coverImageOpacity,
+          "--folder-cover-image-blur": `${coverImageBlur}px`,
+          "--folder-cover-image-scale": 1 + Math.min(0.14, coverImageBlur / 160),
+          "--windows11-folder-back-clip": `url(#${windows11BackClipId})`,
+          "--windows11-folder-front-clip": `url(#${windows11FrontClipId})`,
         } as CSSProperties
       }
       onPointerEnter={() => setIsHovered(true)}
@@ -349,6 +373,19 @@ function StyleFolder({
         handleFolderClick();
       }}
     >
+      {isWindows11Shape && (
+        <svg className="folder-shape-defs" aria-hidden="true" focusable="false">
+          <defs>
+            <clipPath id={windows11BackClipId} clipPathUnits="objectBoundingBox">
+              <path d={windows11Paths.back} transform={windows11ClipTransform} />
+            </clipPath>
+            <clipPath id={windows11FrontClipId} clipPathUnits="objectBoundingBox">
+              <path d={windows11Paths.front} transform={windows11ClipTransform} />
+            </clipPath>
+          </defs>
+        </svg>
+      )}
+
       <div
         id={`folder-back-${folder.id}`}
         className="folder-back folder-surface absolute inset-0 border bg-neutral-900"
@@ -389,6 +426,22 @@ function StyleFolder({
         </div>
       </div>
 
+      {isWindows11Shape && (
+        <svg
+          className="windows11-folder-outline windows11-folder-outline-back"
+          viewBox={WINDOWS11_FOLDER_VIEWBOX}
+          preserveAspectRatio="none"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <path
+            d={windows11Paths.back}
+            transform={windows11OutlineTransform}
+            vectorEffect="non-scaling-stroke"
+          />
+        </svg>
+      )}
+
       {isNearViewport &&
         activeFiles.map((file, index) => (
           <div
@@ -408,7 +461,11 @@ function StyleFolder({
                 src={file.image}
                 srcSet={pexelsSrcSet(file.image)}
                 sizes={
-                  compact ? `${gridItemSize}px` : folderShape === "horizontal" ? "352px" : "256px"
+                  compact
+                    ? `${gridItemSize}px`
+                    : folderShape === "horizontal" || folderShape === "windows11"
+                      ? "352px"
+                      : "256px"
                 }
                 alt={file.name}
                 fallbackSeed={file.id}
@@ -457,7 +514,7 @@ function StyleFolder({
               fallbackSeed={folder.id}
               width={800}
               height={1000}
-              className="h-full w-full object-cover"
+              className="folder-cover-image h-full w-full object-cover"
               referrerPolicy="no-referrer"
               loading={priority ? "eager" : "lazy"}
               fetchPriority={priority ? "high" : "auto"}
@@ -514,6 +571,22 @@ function StyleFolder({
             aria-hidden="true"
           />
         </div>
+
+        {isWindows11Shape && (
+          <svg
+            className="windows11-folder-outline windows11-folder-outline-front"
+            viewBox={WINDOWS11_FOLDER_VIEWBOX}
+            preserveAspectRatio="none"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path
+              d={windows11Paths.front}
+              transform={windows11OutlineTransform}
+              vectorEffect="non-scaling-stroke"
+            />
+          </svg>
+        )}
       </div>
 
       {isLocked && (

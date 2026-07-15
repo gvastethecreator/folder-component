@@ -77,6 +77,10 @@ function makeProps() {
     setPaletteId: vi.fn(),
     visualSource: "image" as const,
     setVisualSource: vi.fn(),
+    coverImageOpacity: 1,
+    setCoverImageOpacity: vi.fn(),
+    coverImageBlur: 0,
+    setCoverImageBlur: vi.fn(),
     onReset: vi.fn(),
     onApplyPreset: vi.fn(),
   };
@@ -135,6 +139,8 @@ describe("PlaygroundControls", () => {
 
     await user.click(screen.getByRole("button", { name: "Square" }));
     expect(props.setFolderShape).toHaveBeenCalledWith("square");
+    await user.click(screen.getByRole("button", { name: "Win 11" }));
+    expect(props.setFolderShape).toHaveBeenCalledWith("windows11");
   });
 
   it("switches between library, CSS, and WAAPI animation engines", async () => {
@@ -189,7 +195,7 @@ describe("PlaygroundControls", () => {
   it("exposes theme, tone, texture, and tab color controls", async () => {
     const user = userEvent.setup();
     const props = { ...makeProps(), tabFill: "color" as const };
-    render(<PlaygroundControls {...props} />);
+    const { rerender } = render(<PlaygroundControls {...props} />);
     await openControlSection(user, "Folder design");
     await openControlSection(user, "Surface & label");
 
@@ -201,6 +207,27 @@ describe("PlaygroundControls", () => {
     expect(props.setVisualSource).toHaveBeenCalledWith("tone");
     expect(props.setTextureEnabled).toHaveBeenCalledTimes(1);
     expect(screen.getByLabelText(/Folder tab color/i)).toHaveValue("#737373");
+    rerender(<PlaygroundControls {...props} visualSource="tone" />);
+    expect(screen.queryByRole("slider", { name: "Cover opacity" })).not.toBeInTheDocument();
+  });
+
+  it("configures cover opacity and blur only for image artwork", async () => {
+    const user = userEvent.setup();
+    const props = makeProps();
+    render(<PlaygroundControls {...props} />);
+    await openControlSection(user, "Folder design");
+
+    fireEvent.change(screen.getByRole("slider", { name: "Cover opacity" }), {
+      target: { value: "0.65" },
+    });
+    fireEvent.change(screen.getByRole("slider", { name: "Cover blur" }), {
+      target: { value: "8" },
+    });
+
+    await vi.waitFor(() => {
+      expect(props.setCoverImageOpacity).toHaveBeenCalledWith(0.65);
+      expect(props.setCoverImageBlur).toHaveBeenCalledWith(8);
+    });
   });
 
   it("applies complete design and behavior presets from the top dropdown", async () => {
@@ -262,6 +289,8 @@ describe("PlaygroundControls", () => {
     expect(props.setLabelVisible).toHaveBeenCalledTimes(1);
     for (const name of [
       "Grid density",
+      "Cover opacity",
+      "Cover blur",
       "Tab width",
       "Tab height",
       "Label opacity",
