@@ -24,11 +24,11 @@ component: **GSAP**, **Motion**, **Anime.js**, pure **CSS**, and native **WAAPI*
 
 ## Quick start
 
-Requires [Bun](https://bun.sh) 1.3.14.
+Requires Node.js 22 and pnpm 11.20.0.
 
 ```sh
-bun install
-bun run dev
+pnpm install
+pnpm run dev
 ```
 
 Open `http://localhost:3000`.
@@ -36,12 +36,12 @@ Open `http://localhost:3000`.
 ## Verify
 
 ```sh
-bun run typecheck
-bun run lint
-bun run format:check
-bun run test
-bun run test:e2e
-bun run build
+pnpm run typecheck
+pnpm run lint
+pnpm run format:check
+pnpm run test
+pnpm run test:e2e
+pnpm run build
 ```
 
 ## Documentation

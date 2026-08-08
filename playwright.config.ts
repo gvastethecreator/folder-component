@@ -29,7 +29,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `bun run vite --host 127.0.0.1 --port ${port} --strictPort`,
+    command: `pnpm exec vite --host 127.0.0.1 --port ${port} --strictPort`,
     url: `${baseURL}/folder-component-health.txt`,
     reuseExistingServer: true,
     timeout: 120_000,

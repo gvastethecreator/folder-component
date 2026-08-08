@@ -4,6 +4,8 @@ build/
 coverage/
 test-results/
 playwright-report/
+.vite/
+.cache/
 logs/*
 !logs/.gitkeep
 *.log
@@ -11,3 +13,4 @@ logs/*
 .env*
 *.tsbuildinfo
 .local/
+

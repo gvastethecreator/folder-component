@@ -2,56 +2,81 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "dev",
+      "label": "⚡ dev",
       "type": "shell",
-      "command": "bun run dev",
+      "command": "pnpm run dev",
       "isBackground": true,
       "problemMatcher": []
     },
     {
-      "label": "build",
+      "label": "📦 build",
       "type": "shell",
-      "command": "bun run build"
+      "command": "pnpm run build"
     },
     {
-      "label": "preview",
+      "label": "🌐 build:pages",
       "type": "shell",
-      "command": "bun run preview",
+      "command": "pnpm run build:pages"
+    },
+    {
+      "label": "👀 preview",
+      "type": "shell",
+      "command": "pnpm run preview",
       "isBackground": true
     },
     {
-      "label": "typecheck",
+      "label": "🔷 typecheck",
       "type": "shell",
-      "command": "bun run typecheck"
+      "command": "pnpm run typecheck"
     },
     {
-      "label": "lint",
+      "label": "🔍 lint",
       "type": "shell",
-      "command": "bun run lint"
+      "command": "pnpm run lint"
     },
     {
-      "label": "format:check",
+      "label": "🔧 lint:fix",
       "type": "shell",
-      "command": "bun run format:check"
+      "command": "pnpm run lint:fix"
     },
     {
-      "label": "test",
+      "label": "✨ format",
       "type": "shell",
-      "command": "bun run test"
+      "command": "pnpm run format"
     },
     {
-      "label": "clean",
+      "label": "📐 format:check",
       "type": "shell",
-      "command": "bun run clean"
+      "command": "pnpm run format:check"
     },
     {
-      "label": "check",
-      "dependsOn": ["lint", "format:check", "typecheck"],
+      "label": "🧪 test",
+      "type": "shell",
+      "command": "pnpm run test"
+    },
+    {
+      "label": "📈 coverage",
+      "type": "shell",
+      "command": "pnpm run test:coverage"
+    },
+    {
+      "label": "🎭 e2e",
+      "type": "shell",
+      "command": "pnpm run test:e2e"
+    },
+    {
+      "label": "🧹 clean",
+      "type": "shell",
+      "command": "pnpm run clean"
+    },
+    {
+      "label": "✅ check",
+      "dependsOn": ["🔍 lint", "📐 format:check", "🔷 typecheck"],
       "group": { "kind": "build", "isDefault": true }
     },
     {
-      "label": "verify",
-      "dependsOn": ["check", "test", "build"]
+      "label": "🚀 verify",
+      "dependsOn": ["✅ check", "🧪 test", "📦 build"]
     }
   ]
 }

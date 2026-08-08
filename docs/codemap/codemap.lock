@@ -1,0 +1,86 @@
+{
+  "current_commit": "989b3e800d10995ee8d0afda25b50615ddb4de4d",
+  "working_tree_dirty": true,
+  "generated_at": "2026-08-08T11:55:00Z",
+  "scanned_scope": [
+    "."
+  ],
+  "excluded_directories": [
+    ".cache",
+    ".git",
+    ".hg",
+    ".next",
+    ".nuxt",
+    ".svn",
+    ".turbo",
+    ".venv",
+    "__pycache__",
+    "build",
+    "coverage",
+    "dist",
+    "docs/codemap",
+    "generated",
+    "node_modules",
+    "out",
+    "target",
+    "vendor",
+    "venv"
+  ],
+  "fingerprint_algorithm": "sha256-path-content-v1",
+  "modules": [
+    {
+      "id": ".",
+      "path": ".",
+      "file_count": 13,
+      "fingerprint": "95844a67f6ac9fedaa1de1dbf6327916d1e62fc6681ab670e2f64407ed61f79b"
+    },
+    {
+      "id": ".github",
+      "path": ".github",
+      "file_count": 2,
+      "fingerprint": "40e825831fc1cab63225f4005ee120174f367bb3ab8f50c54e5a510ecc3fe6a5"
+    },
+    {
+      "id": ".vscode",
+      "path": ".vscode",
+      "file_count": 1,
+      "fingerprint": "acac0ab075bfdc6e848a8bc3e91640fcd7005c92b748611109da1ea0cc09c5ae"
+    },
+    {
+      "id": "docs",
+      "path": "docs",
+      "file_count": 7,
+      "fingerprint": "c5d97a7b6d5380db43e0cd9518b02593212b77d9d80ece449e4bff6ba00fee06"
+    },
+    {
+      "id": "e2e",
+      "path": "e2e",
+      "file_count": 2,
+      "fingerprint": "f4721d40217062f35be2f36c7934dbfed963f35406426ab9bfab518f3017bc73"
+    },
+    {
+      "id": "logs",
+      "path": "logs",
+      "file_count": 1,
+      "fingerprint": "ca529b17df8b65dae6995867d41e104507c5c3ca157c97969ee8239763ca9b70"
+    },
+    {
+      "id": "public",
+      "path": "public",
+      "file_count": 1,
+      "fingerprint": "8c62c016eb7405bc036acdb95304af3dfc9a407fb8e2b41423e4614ed17ab7f7"
+    },
+    {
+      "id": "scripts",
+      "path": "scripts",
+      "file_count": 1,
+      "fingerprint": "950715d456c631e44f3bb6dadf80ef00299c82631c90c08f92943be626928f20"
+    },
+    {
+      "id": "src",
+      "path": "src",
+      "file_count": 23,
+      "fingerprint": "c1c10e638d2bcb94940874293aa6aef14c497848ae5efee55d4bfda9615f9d60"
+    }
+  ]
+}

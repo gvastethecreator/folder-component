@@ -8,7 +8,7 @@ The live playground is a GitHub Project Page at:
 
 `.github/workflows/pages.yml` runs on pushes to `main` and can also be started manually. It:
 
-1. installs the pinned Bun dependencies;
+1. installs the pnpm-locked dependencies;
 2. runs typecheck, lint, formatting, unit tests, Chromium flows, and dependency audit;
 3. builds with the required Vite base path `/folder-component/`;
 4. uploads `dist/` as a Pages artifact;
@@ -25,14 +25,14 @@ required.
 Build the root-hosted app:
 
 ```sh
-bun run build
-bun run preview
+pnpm run build
+pnpm run preview
 ```
 
 Build the exact GitHub Pages artifact:
 
 ```sh
-bun run build:pages
+pnpm run build:pages
 ```
 
 The Pages artifact must reference assets below `/folder-component/assets/`. The regular local

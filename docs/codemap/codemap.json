@@ -1,0 +1,875 @@
+{
+  "generated_at": "2026-08-08T11:55:00Z",
+  "generated_from_commit": "989b3e800d10995ee8d0afda25b50615ddb4de4d",
+  "scope": [
+    "."
+  ],
+  "nodes": [
+    {
+      "id": "external-dependencies",
+      "path": "index.html",
+      "role": "Represents external packages referenced by tracked source files.",
+      "type": "external",
+      "boundary": "External",
+      "entrypoints": [
+        "index.html:https://images.pexels.com"
+      ],
+      "tests": [],
+      "constraints": [
+        "Only dependencies with literal tracked-source references appear here."
+      ],
+      "evidence": {
+        "status": "verified",
+        "locations": [
+          {
+            "path": "index.html",
+            "symbol": "https://images.pexels.com"
+          }
+        ]
+      }
+    },
+    {
+      "id": "index",
+      "path": "index.html",
+      "role": "Owns the tracked files for the index module.",
+      "type": "module",
+      "boundary": "Index",
+      "entrypoints": [
+        "index.html:Folder Component — Animation Playground"
+      ],
+      "tests": [],
+      "constraints": [
+        "This baseline uses tracked source and explicit dependency references only."
+      ],
+      "evidence": {
+        "status": "verified",
+        "locations": [
+          {
+            "path": "index.html",
+            "symbol": "Folder Component — Animation Playground"
+          }
+        ]
+      }
+    },
+    {
+      "id": "playwright-config",
+      "path": "playwright.config.ts",
+      "role": "Owns the tracked files for the playwright.config module.",
+      "type": "module",
+      "boundary": "Playwright.Config",
+      "entrypoints": [
+        "playwright.config.ts:port"
+      ],
+      "tests": [],
+      "constraints": [
+        "This baseline uses tracked source and explicit dependency references only."
+      ],
+      "evidence": {
+        "status": "verified",
+        "locations": [
+          {
+            "path": "playwright.config.ts",
+            "symbol": "port"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repository",
+      "path": "README.md",
+      "role": "Owns the tracked files for the repository module.",
+      "type": "module",
+      "boundary": "Repository",
+      "entrypoints": [
+        "README.md:Folder Component"
+      ],
+      "tests": [],
+      "constraints": [
+        "This baseline uses tracked source and explicit dependency references only."
+      ],
+      "evidence": {
+        "status": "verified",
+        "locations": [
+          {
+            "path": "README.md",
+            "symbol": "Folder Component"
+          }
+        ]
+      }
+    },
+    {
+      "id": "scripts",
+      "path": "scripts",
+      "role": "Owns the tracked files for the scripts module.",
+      "type": "service",
+      "boundary": "Scripts",
+      "entrypoints": [
+        "scripts/clean.ts:targets"
+      ],
+      "tests": [],
+      "constraints": [
+        "This baseline uses tracked source and explicit dependency references only."
+      ],
+      "evidence": {
+        "status": "verified",
+        "locations": [
+          {
+            "path": "scripts/clean.ts",
+            "symbol": "targets"
+          }
+        ]
+      }
+    },
+    {
+      "id": "src",
+      "path": "src",
+      "role": "Owns the tracked files for the src module.",
+      "type": "module",
+      "boundary": "Src",
+      "entrypoints": [
+        "src/App.tsx:DesignPresetId"
+      ],
+      "tests": [
+        "src/App.test.tsx",
+        "src/animation/folderGeometry.test.ts",
+        "src/components/PlaygroundControls.test.tsx",
+        "src/components/StyleFolder.test.tsx"
+      ],
+      "constraints": [
+        "This baseline uses tracked source and explicit dependency references only."
+      ],
+      "evidence": {
+        "status": "verified",
+        "locations": [
+          {
+            "path": "src/App.tsx",
+            "symbol": "DesignPresetId"
+          }
+        ]
+      }
+    },
+    {
+      "id": "src-animation",
+      "path": "src/animation",
+      "role": "Owns the tracked files for the src / animation module.",
+      "type": "module",
+      "boundary": "Src",
+      "entrypoints": [
+        "src/animation/animationTiming.ts:getMotionDuration"
+      ],
+      "tests": [
+        "src/App.test.tsx",
+        "src/animation/animationTiming.test.ts",
+        "src/animation/folderGeometry.test.ts"
+      ],
+      "constraints": [
+        "This baseline uses tracked source and explicit dependency references only."
+      ],
+      "evidence": {
+        "status": "verified",
+        "locations": [
+          {
+            "path": "src/animation/animationTiming.ts",
+            "symbol": "getMotionDuration"
+          }
+        ]
+      }
+    },
+    {
+      "id": "src-components",
+      "path": "src/components",
+      "role": "Owns the tracked files for the src / components module.",
+      "type": "interface",
+      "boundary": "Src",
+      "entrypoints": [
+        "src/components/ImageWithFallback.tsx:neutralTone"
+      ],
+      "tests": [
+        "src/components/PlaygroundControls.test.tsx",
+        "src/components/StyleFolder.test.tsx"
+      ],
+      "constraints": [
+        "This baseline uses tracked source and explicit dependency references only."
+      ],
+      "evidence": {
+        "status": "verified",
+        "locations": [
+          {
+            "path": "src/components/ImageWithFallback.tsx",
+            "symbol": "neutralTone"
+          }
+        ]
+      }
+    },
+    {
+      "id": "src-config",
+      "path": "src/config",
+      "role": "Owns the tracked files for the src / config module.",
+      "type": "module",
+      "boundary": "Src",
+      "entrypoints": [
+        "src/config/folderShapeGeometry.ts:getWindows11FolderPaths"
+      ],
+      "tests": [
+        "src/App.test.tsx",
+        "src/components/StyleFolder.test.tsx",
+        "src/config/folderShapeGeometry.test.ts"
+      ],
+      "constraints": [
+        "This baseline uses tracked source and explicit dependency references only."
+      ],
+      "evidence": {
+        "status": "verified",
+        "locations": [
+          {
+            "path": "src/config/folderShapeGeometry.ts",
+            "symbol": "getWindows11FolderPaths"
+          }
+        ]
+      }
+    },
+    {
+      "id": "src-data",
+      "path": "src/data",
+      "role": "Owns the tracked files for the src / data module.",
+      "type": "module",
+      "boundary": "Src",
+      "entrypoints": [
+        "src/data/stylesData.ts:pexels"
+      ],
+      "tests": [
+        "src/App.test.tsx",
+        "src/components/StyleFolder.test.tsx",
+        "src/data/stylesData.test.ts"
+      ],
+      "constraints": [
+        "This baseline uses tracked source and explicit dependency references only."
+      ],
+      "evidence": {
+        "status": "verified",
+        "locations": [
+          {
+            "path": "src/data/stylesData.ts",
+            "symbol": "pexels"
+          }
+        ]
+      }
+    },
+    {
+      "id": "vite-config",
+      "path": "vite.config.ts",
+      "role": "Owns the tracked files for the vite.config module.",
+      "type": "module",
+      "boundary": "Vite.Config",
+      "entrypoints": [
+        "vite.config.ts:import tailwindcss from \"@tailwindcss/vite\";"
+      ],
+      "tests": [],
+      "constraints": [
+        "This baseline uses tracked source and explicit dependency references only."
+      ],
+      "evidence": {
+        "status": "verified",
+        "locations": [
+          {
+            "path": "vite.config.ts",
+            "symbol": "import tailwindcss from \"@tailwindcss/vite\";"
+          }
+        ]
+      }
+    },
+    {
+      "id": "vitest-config",
+      "path": "vitest.config.ts",
+      "role": "Owns the tracked files for the vitest.config module.",
+      "type": "module",
+      "boundary": "Vitest.Config",
+      "entrypoints": [
+        "vitest.config.ts:import { defineConfig } from \"vitest/config\";"
+      ],
+      "tests": [],
+      "constraints": [
+        "This baseline uses tracked source and explicit dependency references only."
+      ],
+      "evidence": {
+        "status": "verified",
+        "locations": [
+          {
+            "path": "vitest.config.ts",
+            "symbol": "import { defineConfig } from \"vitest/config\";"
+          }
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "index",
+      "to": "external-dependencies",
+      "type": "imports",
+      "evidence": {
+        "status": "verified",
+        "locations": [
+          {
+            "path": "index.html",
+            "symbol": "https://images.pexels.com"
+          },
+          {
+            "path": "index.html",
+            "symbol": "https://fonts.googleapis.com"
+          },
+          {
+            "path": "index.html",
+            "symbol": "https://fonts.gstatic.com"
+          },
+          {
+            "path": "index.html",
+            "symbol": "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap"
+          }
+        ]
+      }
+    },
+    {
+      "from": "index",
+      "to": "src",
+      "type": "imports",
+      "evidence": {
+        "status": "verified",
+        "locations": [
+          {
+            "path": "index.html",
+            "symbol": "/src/main.tsx"
+          }
+        ]
+      }
+    },
+    {
+      "from": "playwright-config",
+      "to": "external-dependencies",
+      "type": "imports",
+      "evidence": {
+        "status": "verified",
+        "locations": [
+          {
+            "path": "playwright.config.ts",
+            "symbol": "@playwright/test"
+          }
+        ]
+      }
+    },
+    {
+      "from": "repository",
+      "to": "scripts",
+      "type": "calls",
+      "evidence": {
+        "status": "verified",
+        "locations": [
+          {
+            "path": "package.json",
+            "symbol": "scripts/clean.ts"
+          }
+        ]
+      }
+    },
+    {
+      "from": "src",
+      "to": "external-dependencies",
+      "type": "imports",
+      "evidence": {
+        "status": "verified",
+        "locations": [
+          {
+            "path": "src/App.test.tsx",
+            "symbol": "vitest"
+          },
+          {
+            "path": "src/App.test.tsx",
+            "symbol": "@testing-library/react"
+          },
+          {
+            "path": "src/App.test.tsx",
+            "symbol": "@testing-library/user-event"
+          },
+          {
+            "path": "src/App.test.tsx",
+            "symbol": "vite"
+          },
+          {
+            "path": "src/App.tsx",
+            "symbol": "react"
+          },
+          {
+            "path": "src/App.tsx",
+            "symbol": "@tabler/icons-react"
+          },
+          {
+            "path": "src/main.tsx",
+            "symbol": "react"
+          },
+          {
+            "path": "src/main.tsx",
+            "symbol": "react-dom/client"
+          }
+        ]
+      }
+    },
+    {
+      "from": "src",
+      "to": "src-animation",
+      "type": "imports",
+      "evidence": {
+        "status": "verified",
+        "locations": [
+          {
+            "path": "src/App.test.tsx",
+            "symbol": "./animation/engineCatalog"
+          },
+          {
+            "path": "src/App.tsx",
+            "symbol": "./animation/engineCatalog"
+          }
+        ]
+      }
+    },
+    {
+      "from": "src",
+      "to": "src-components",
+      "type": "imports",
+      "evidence": {
+        "status": "verified",
+        "locations": [
+          {
+            "path": "src/App.tsx",
+            "symbol": "./components/StyleFolder"
+          },
+          {
+            "path": "src/App.tsx",
+            "symbol": "./components/PlaygroundControls"
+          }
+        ]
+      }
+    },
+    {
+      "from": "src",
+      "to": "src-config",
+      "type": "imports",
+      "evidence": {
+        "status": "verified",
+        "locations": [
+          {
+            "path": "src/App.test.tsx",
+            "symbol": "./config/playgroundCatalog"
+          },
+          {
+            "path": "src/App.tsx",
+            "symbol": "./config/playgroundCatalog"
+          }
+        ]
+      }
+    },
+    {
+      "from": "src",
+      "to": "src-data",
+      "type": "imports",
+      "evidence": {
+        "status": "verified",
+        "locations": [
+          {
+            "path": "src/App.test.tsx",
+            "symbol": "./data/stylesData"
+          },
+          {
+            "path": "src/App.tsx",
+            "symbol": "./data/stylesData"
+          }
+        ]
+      }
+    },
+    {
+      "from": "src-animation",
+      "to": "external-dependencies",
+      "type": "imports",
+      "evidence": {
+        "status": "verified",
+        "locations": [
+          {
+            "path": "src/animation/animationTiming.test.ts",
+            "symbol": "vitest"
+          },
+          {
+            "path": "src/animation/engineCatalog.ts",
+            "symbol": "gsap"
+          },
+          {
+            "path": "src/animation/engineCatalog.ts",
+            "symbol": "motion"
+          },
+          {
+            "path": "src/animation/engineCatalog.ts",
+            "symbol": "animejs"
+          },
+          {
+            "path": "src/animation/engineCatalog.ts",
+            "symbol": "react"
+          },
+          {
+            "path": "src/animation/folderEngines.ts",
+            "symbol": "gsap"
+          },
+          {
+            "path": "src/animation/folderEngines.ts",
+            "symbol": "motion"
+          },
+          {
+            "path": "src/animation/folderEngines.ts",
+            "symbol": "animejs"
+          }
+        ]
+      }
+    },
+    {
+      "from": "src-animation",
+      "to": "src",
+      "type": "imports",
+      "evidence": {
+        "status": "verified",
+        "locations": [
+          {
+            "path": "src/animation/animationTiming.ts",
+            "symbol": "../types"
+          },
+          {
+            "path": "src/animation/engineCatalog.ts",
+            "symbol": "../types"
+          },
+          {
+            "path": "src/animation/folderEngines.ts",
+            "symbol": "../types"
+          },
+          {
+            "path": "src/animation/folderGeometry.test.ts",
+            "symbol": "../types"
+          },
+          {
+            "path": "src/animation/folderGeometry.ts",
+            "symbol": "../types"
+          }
+        ]
+      }
+    },
+    {
+      "from": "src-animation",
+      "to": "src-config",
+      "type": "imports",
+      "evidence": {
+        "status": "verified",
+        "locations": [
+          {
+            "path": "src/animation/engineCatalog.ts",
+            "symbol": "../config/playgroundCatalog"
+          },
+          {
+            "path": "src/animation/engineCatalog.ts",
+            "symbol": "../config/folderShapeGeometry"
+          }
+        ]
+      }
+    },
+    {
+      "from": "src-components",
+      "to": "external-dependencies",
+      "type": "imports",
+      "evidence": {
+        "status": "verified",
+        "locations": [
+          {
+            "path": "src/components/ImageWithFallback.tsx",
+            "symbol": "react"
+          },
+          {
+            "path": "src/components/PlaygroundControls.test.tsx",
+            "symbol": "vitest"
+          },
+          {
+            "path": "src/components/PlaygroundControls.test.tsx",
+            "symbol": "@testing-library/react"
+          },
+          {
+            "path": "src/components/PlaygroundControls.test.tsx",
+            "symbol": "@testing-library/user-event"
+          },
+          {
+            "path": "src/components/PlaygroundControls.tsx",
+            "symbol": "react"
+          },
+          {
+            "path": "src/components/PlaygroundControls.tsx",
+            "symbol": "@tabler/icons-react"
+          },
+          {
+            "path": "src/components/StyleFolder.test.tsx",
+            "symbol": "vitest"
+          },
+          {
+            "path": "src/components/StyleFolder.test.tsx",
+            "symbol": "@testing-library/react"
+          }
+        ]
+      }
+    },
+    {
+      "from": "src-components",
+      "to": "src",
+      "type": "imports",
+      "evidence": {
+        "status": "verified",
+        "locations": [
+          {
+            "path": "src/components/PlaygroundControls.test.tsx",
+            "symbol": "../types"
+          },
+          {
+            "path": "src/components/PlaygroundControls.tsx",
+            "symbol": "../types"
+          },
+          {
+            "path": "src/components/StyleFolder.test.tsx",
+            "symbol": "../types"
+          },
+          {
+            "path": "src/components/StyleFolder.tsx",
+            "symbol": "../types"
+          }
+        ]
+      }
+    },
+    {
+      "from": "src-components",
+      "to": "src-animation",
+      "type": "imports",
+      "evidence": {
+        "status": "verified",
+        "locations": [
+          {
+            "path": "src/components/PlaygroundControls.tsx",
+            "symbol": "../animation/engineCatalog"
+          },
+          {
+            "path": "src/components/StyleFolder.tsx",
+            "symbol": "../animation/folderEngines"
+          },
+          {
+            "path": "src/components/StyleFolder.tsx",
+            "symbol": "../animation/folderGeometry"
+          },
+          {
+            "path": "src/components/StyleFolder.tsx",
+            "symbol": "../animation/animationTiming"
+          }
+        ]
+      }
+    },
+    {
+      "from": "src-components",
+      "to": "src-config",
+      "type": "imports",
+      "evidence": {
+        "status": "verified",
+        "locations": [
+          {
+            "path": "src/components/PlaygroundControls.tsx",
+            "symbol": "../config/playgroundCatalog"
+          },
+          {
+            "path": "src/components/StyleFolder.test.tsx",
+            "symbol": "../config/folderShapeGeometry"
+          },
+          {
+            "path": "src/components/StyleFolder.tsx",
+            "symbol": "../config/playgroundCatalog"
+          },
+          {
+            "path": "src/components/StyleFolder.tsx",
+            "symbol": "../config/folderShapeGeometry"
+          }
+        ]
+      }
+    },
+    {
+      "from": "src-components",
+      "to": "src-data",
+      "type": "imports",
+      "evidence": {
+        "status": "verified",
+        "locations": [
+          {
+            "path": "src/components/StyleFolder.test.tsx",
+            "symbol": "../data/stylesData"
+          }
+        ]
+      }
+    },
+    {
+      "from": "src-config",
+      "to": "external-dependencies",
+      "type": "imports",
+      "evidence": {
+        "status": "verified",
+        "locations": [
+          {
+            "path": "src/config/folderShapeGeometry.test.ts",
+            "symbol": "vitest"
+          }
+        ]
+      }
+    },
+    {
+      "from": "src-config",
+      "to": "src",
+      "type": "imports",
+      "evidence": {
+        "status": "verified",
+        "locations": [
+          {
+            "path": "src/config/folderShapeGeometry.ts",
+            "symbol": "../types"
+          },
+          {
+            "path": "src/config/playgroundCatalog.ts",
+            "symbol": "../types"
+          }
+        ]
+      }
+    },
+    {
+      "from": "src-data",
+      "to": "external-dependencies",
+      "type": "imports",
+      "evidence": {
+        "status": "verified",
+        "locations": [
+          {
+            "path": "src/data/stylesData.test.ts",
+            "symbol": "vitest"
+          }
+        ]
+      }
+    },
+    {
+      "from": "src-data",
+      "to": "src",
+      "type": "imports",
+      "evidence": {
+        "status": "verified",
+        "locations": [
+          {
+            "path": "src/data/stylesData.ts",
+            "symbol": "../types"
+          }
+        ]
+      }
+    },
+    {
+      "from": "vite-config",
+      "to": "external-dependencies",
+      "type": "imports",
+      "evidence": {
+        "status": "verified",
+        "locations": [
+          {
+            "path": "vite.config.ts",
+            "symbol": "@tailwindcss/vite"
+          },
+          {
+            "path": "vite.config.ts",
+            "symbol": "@vitejs/plugin-react"
+          },
+          {
+            "path": "vite.config.ts",
+            "symbol": "vite"
+          }
+        ]
+      }
+    },
+    {
+      "from": "vitest-config",
+      "to": "external-dependencies",
+      "type": "imports",
+      "evidence": {
+        "status": "verified",
+        "locations": [
+          {
+            "path": "vitest.config.ts",
+            "symbol": "vitest/config"
+          },
+          {
+            "path": "vitest.config.ts",
+            "symbol": "@vitejs/plugin-react"
+          }
+        ]
+      }
+    }
+  ],
+  "flows": [
+    {
+      "trigger": "Tracked reference index.html:/src/main.tsx",
+      "steps": [
+        "index",
+        "src",
+        "src-components",
+        "src-animation",
+        "src-config",
+        "external-dependencies"
+      ],
+      "outcome": "The verified dependency path reaches external-dependencies through 5 step(s)."
+    },
+    {
+      "trigger": "Tracked reference src/animation/engineCatalog.ts:../config/playgroundCatalog",
+      "steps": [
+        "src-animation",
+        "src-config",
+        "src",
+        "src-components",
+        "src-data",
+        "external-dependencies"
+      ],
+      "outcome": "The verified dependency path reaches external-dependencies through 5 step(s)."
+    },
+    {
+      "trigger": "Tracked reference src/components/PlaygroundControls.tsx:../animation/engineCatalog",
+      "steps": [
+        "src-components",
+        "src-animation",
+        "src-config",
+        "src",
+        "src-data",
+        "external-dependencies"
+      ],
+      "outcome": "The verified dependency path reaches external-dependencies through 5 step(s)."
+    },
+    {
+      "trigger": "Tracked reference src/components/StyleFolder.test.tsx:../data/stylesData",
+      "steps": [
+        "src-components",
+        "src-data",
+        "src",
+        "src-animation",
+        "src-config",
+        "external-dependencies"
+      ],
+      "outcome": "The verified dependency path reaches external-dependencies through 5 step(s)."
+    },
+    {
+      "trigger": "Tracked reference src/data/stylesData.ts:../types",
+      "steps": [
+        "src-data",
+        "src",
+        "src-components",
+        "src-animation",
+        "src-config",
+        "external-dependencies"
+      ],
+      "outcome": "The verified dependency path reaches external-dependencies through 5 step(s)."
+    }
+  ]
+}
