@@ -1,11 +1,7 @@
 import gsap from "gsap";
-import { animate as motionAnimate } from "motion";
-import type { AnimationPlaybackControls } from "motion";
-import { animate as animeAnimate, spring as animeSpring } from "animejs";
-import type { JSAnimation } from "animejs";
 import type { AnimationEngine, SpringSettings, TransitionCurve } from "../types";
 import type { CardTransform } from "./folderGeometry";
-import { getGsapEase, getNativeEase, getSpringProfile } from "./animationTiming";
+import { getGsapEase, getNativeEase } from "./animationTiming";
 
 export interface FolderEngineController {
   setOpen: (open: boolean, immediate?: boolean) => void;
@@ -39,7 +35,7 @@ function applyTransform(target: HTMLElement, transform: CardTransform) {
   target.style.transform = transformValue(transform);
 }
 
-function setImmediateState(options: FolderEngineOptions, open: boolean) {
+export function setImmediateState(options: FolderEngineOptions, open: boolean) {
   const transforms = open ? options.expanded : options.collapsed;
   options.cards.forEach((card, index) => applyTransform(card, transforms[index]));
   applyTransform(options.front, {
@@ -50,30 +46,15 @@ function setImmediateState(options: FolderEngineOptions, open: boolean) {
   });
 }
 
-function setLayers(targets: HTMLElement[], active: boolean) {
+export function setLayers(targets: HTMLElement[], active: boolean) {
   for (const target of targets) target.style.willChange = active ? "transform" : "auto";
 }
 
-function orderedDelay(index: number, count: number, open: boolean, staggerDelay: number) {
+export function orderedDelay(index: number, count: number, open: boolean, staggerDelay: number) {
   return (open ? index : count - index - 1) * staggerDelay;
 }
 
-function stopMotionAnimations(animations: AnimationPlaybackControls[]) {
-  for (const animation of animations) animation.stop();
-  animations.length = 0;
-}
-
-function cancelMotionAnimations(animations: AnimationPlaybackControls[]) {
-  for (const animation of animations) animation.cancel();
-  animations.length = 0;
-}
-
-function cancelAnimeAnimations(animations: JSAnimation[]) {
-  for (const animation of animations) animation.cancel();
-  animations.length = 0;
-}
-
-function resetFeedbackState(options: FolderEngineOptions) {
+export function resetFeedbackState(options: FolderEngineOptions) {
   options.root.style.removeProperty("transform");
   if (options.flash) {
     options.flash.style.removeProperty("opacity");
@@ -412,201 +393,6 @@ function createGsapController(options: FolderEngineOptions): FolderEngineControl
   };
 }
 
-function createMotionController(options: FolderEngineOptions): FolderEngineController {
-  const targets = [...options.cards, options.front];
-  let activeAnimations: AnimationPlaybackControls[] = [];
-  let feedbackAnimations: AnimationPlaybackControls[] = [];
-  let run = 0;
-
-  const setOpen = (open: boolean, immediate = false) => {
-    run += 1;
-    const currentRun = run;
-    stopMotionAnimations(activeAnimations);
-
-    if (immediate || options.reducedMotion) {
-      setImmediateState(options, open);
-      setLayers(targets, false);
-      return;
-    }
-
-    const transforms = open ? options.expanded : options.collapsed;
-    setLayers(targets, true);
-    const springProfile = getSpringProfile(options.transitionCurve, options.springSettings);
-    const transition =
-      options.transitionCurve === "tween"
-        ? {
-            type: "tween" as const,
-            duration: options.duration,
-            ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
-          }
-        : {
-            type: "spring" as const,
-            stiffness: springProfile.stiffness,
-            damping: springProfile.damping,
-            mass: springProfile.mass,
-          };
-
-    activeAnimations = options.cards.map((card, index) =>
-      motionAnimate(
-        card,
-        {
-          x: transforms[index].x,
-          y: transforms[index].y,
-          rotate: transforms[index].rotation,
-          scale: transforms[index].scale,
-        },
-        {
-          ...transition,
-          delay: orderedDelay(index, options.cards.length, open, options.staggerDelay),
-        },
-      ),
-    );
-    activeAnimations.push(
-      motionAnimate(
-        options.front,
-        {
-          x: 0,
-          y: open ? options.frontOpen.y : 0,
-          rotate: 0,
-          scale: open ? options.frontOpen.scale : 1,
-        },
-        transition,
-      ),
-    );
-
-    Promise.all(activeAnimations.map((animation) => animation.finished)).then(
-      () => {
-        if (run === currentRun) setLayers(targets, false);
-      },
-      () => {
-        if (run === currentRun) setLayers(targets, false);
-      },
-    );
-  };
-
-  setOpen(options.initialOpen, true);
-
-  return {
-    setOpen,
-    pulse: () => {
-      if (options.reducedMotion) return;
-      cancelMotionAnimations(feedbackAnimations);
-      feedbackAnimations.push(
-        motionAnimate(options.root, { scale: [0.975, 1] }, { duration: 0.24, ease: "easeOut" }),
-      );
-    },
-    flash: () => {
-      if (options.reducedMotion || !options.flash) return;
-      cancelMotionAnimations(feedbackAnimations);
-      feedbackAnimations.push(
-        motionAnimate(options.flash, { opacity: [0.28, 0] }, { duration: 0.34, ease: "easeOut" }),
-      );
-    },
-    destroy: () => {
-      run += 1;
-      stopMotionAnimations(activeAnimations);
-      cancelMotionAnimations(feedbackAnimations);
-      setLayers(targets, false);
-      resetFeedbackState(options);
-    },
-  };
-}
-
-function createAnimeController(options: FolderEngineOptions): FolderEngineController {
-  const targets = [...options.cards, options.front];
-  let activeAnimations: JSAnimation[] = [];
-  let feedbackAnimations: JSAnimation[] = [];
-  let run = 0;
-
-  const setOpen = (open: boolean, immediate = false) => {
-    run += 1;
-    const currentRun = run;
-    cancelAnimeAnimations(activeAnimations);
-
-    if (immediate || options.reducedMotion) {
-      setImmediateState(options, open);
-      setLayers(targets, false);
-      return;
-    }
-
-    const transforms = open ? options.expanded : options.collapsed;
-    const springProfile = getSpringProfile(options.transitionCurve, options.springSettings);
-    const ease =
-      options.transitionCurve === "tween"
-        ? "out(4)"
-        : animeSpring({
-            stiffness: springProfile.stiffness,
-            damping: springProfile.damping,
-            mass: springProfile.mass,
-          });
-    let pending = options.cards.length + 1;
-    const completeOne = () => {
-      pending -= 1;
-      if (pending === 0 && run === currentRun) setLayers(targets, false);
-    };
-
-    setLayers(targets, true);
-    activeAnimations = options.cards.map((card, index) =>
-      animeAnimate(card, {
-        x: transforms[index].x,
-        y: transforms[index].y,
-        rotate: transforms[index].rotation,
-        scale: transforms[index].scale,
-        duration: options.duration * 1000,
-        delay: orderedDelay(index, options.cards.length, open, options.staggerDelay) * 1000,
-        ease,
-        onComplete: completeOne,
-      }),
-    );
-    activeAnimations.push(
-      animeAnimate(options.front, {
-        x: 0,
-        y: open ? options.frontOpen.y : 0,
-        rotate: 0,
-        scale: open ? options.frontOpen.scale : 1,
-        duration: options.duration * 1000,
-        ease,
-        onComplete: completeOne,
-      }),
-    );
-  };
-
-  setOpen(options.initialOpen, true);
-
-  return {
-    setOpen,
-    pulse: () => {
-      if (options.reducedMotion) return;
-      cancelAnimeAnimations(feedbackAnimations);
-      feedbackAnimations.push(
-        animeAnimate(options.root, {
-          scale: [0.975, 1],
-          duration: 240,
-          ease: "out(3)",
-        }),
-      );
-    },
-    flash: () => {
-      if (options.reducedMotion || !options.flash) return;
-      cancelAnimeAnimations(feedbackAnimations);
-      feedbackAnimations.push(
-        animeAnimate(options.flash, {
-          opacity: [0.28, 0],
-          duration: 340,
-          ease: "out(2)",
-        }),
-      );
-    },
-    destroy: () => {
-      run += 1;
-      cancelAnimeAnimations(activeAnimations);
-      cancelAnimeAnimations(feedbackAnimations);
-      setLayers(targets, false);
-      resetFeedbackState(options);
-    },
-  };
-}
-
 export function createFolderEngineController(options: FolderEngineOptions) {
   resetFeedbackState(options);
   const controller =
@@ -614,10 +400,25 @@ export function createFolderEngineController(options: FolderEngineOptions) {
       ? createCssController(options)
       : options.engine === "waapi"
         ? createWaapiController(options)
-        : options.engine === "motion"
-          ? createMotionController(options)
-          : options.engine === "animejs"
-            ? createAnimeController(options)
-            : createGsapController(options);
+        : createGsapController(options);
   return stabilizeFeedbackSeam(options, controller);
+}
+
+export async function loadFolderEngineController(options: FolderEngineOptions) {
+  if (options.engine !== "motion" && options.engine !== "animejs") {
+    return createFolderEngineController(options);
+  }
+
+  resetFeedbackState(options);
+  const controller =
+    options.engine === "motion"
+      ? (await import("./motionFolderEngine")).createMotionController(options)
+      : (await import("./animeFolderEngine")).createAnimeController(options);
+  return stabilizeFeedbackSeam(options, controller);
+}
+
+export function preloadFolderEngine(engine: AnimationEngine) {
+  if (engine === "motion") return import("./motionFolderEngine").then(() => undefined);
+  if (engine === "animejs") return import("./animeFolderEngine").then(() => undefined);
+  return Promise.resolve();
 }

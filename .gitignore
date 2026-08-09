@@ -6,6 +6,11 @@ test-results/
 playwright-report/
 .vite/
 .cache/
+.output/
+.pnpm-store/
+.scratch/
+.vercel/
+blob-report/
 logs/*
 !logs/.gitkeep
 *.log
@@ -13,4 +18,3 @@ logs/*
 .env*
 *.tsbuildinfo
 .local/
-

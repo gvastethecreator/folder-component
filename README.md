@@ -24,7 +24,7 @@ component: **GSAP**, **Motion**, **Anime.js**, pure **CSS**, and native **WAAPI*
 
 ## Quick start
 
-Requires Node.js 22 and pnpm 11.20.0.
+Requires Node.js 22.22.2 or newer and pnpm 11.20.0.
 
 ```sh
 pnpm install
@@ -42,6 +42,7 @@ pnpm run format:check
 pnpm run test
 pnpm run test:e2e
 pnpm run build
+pnpm run deps:check
 ```
 
 ## Documentation
@@ -50,15 +51,18 @@ pnpm run build
 - [Architecture and engine contract](docs/architecture.md)
 - [GitHub Pages deployment](docs/deployment.md)
 - [Known tradeoffs](docs/technical-debt.md)
+- [Dependency decisions and changelogs](docs/dependencies.md)
+- [Maintenance guide](docs/maintenance.md)
 
 The app is fully static. It has no backend, secrets, API keys, or required environment
 variables. Pexels imagery is used under the [Pexels license](https://www.pexels.com/license/).
 
 ## Status
 
-- Release-candidate checks cover 98 unit tests and 22 Chromium end-to-end scenarios.
+- Local gates cover 98 unit tests and 22 Chromium end-to-end scenarios.
 - Firefox, Safari, and manual screen-reader testing are not part of the automated baseline.
-- All five animation adapters are intentionally bundled together for instant comparison.
+- Motion and Anime.js load on demand and prefetch on pointer or keyboard intent. The initial
+  JavaScript bundle is 118.28 kB gzip, down from 151.67 kB before this split.
 
 ## License
 

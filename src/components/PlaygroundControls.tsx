@@ -53,6 +53,7 @@ import {
   ENGINE_CATALOG_LIST,
   buildPlaygroundSnippet,
 } from "../animation/engineCatalog";
+import { preloadFolderEngine } from "../animation/folderEngines";
 import {
   DESIGN_PRESETS,
   DESIGN_PRESET_LIST,
@@ -197,12 +198,14 @@ function SegmentControl<T extends string>({
   value,
   options,
   onChange,
+  onIntent,
   className = "",
 }: {
   label: string;
   value: T;
   options: readonly SegmentOption<T>[];
   onChange: (value: T) => void;
+  onIntent?: (value: T) => void;
   className?: string;
 }) {
   return (
@@ -214,6 +217,8 @@ function SegmentControl<T extends string>({
             key={option.value}
             type="button"
             aria-pressed={value === option.value}
+            onFocus={() => onIntent?.(option.value)}
+            onPointerEnter={() => onIntent?.(option.value)}
             onClick={() => onChange(option.value)}
             className={`segment-button ${value === option.value ? "is-active" : ""}`}
           >
@@ -747,6 +752,7 @@ export default function PlaygroundControls({
               label="Engine"
               value={animationEngine}
               onChange={setAnimationEngine}
+              onIntent={(engineId) => void preloadFolderEngine(engineId)}
               className="engine-selector"
               options={ENGINE_CATALOG_LIST.map(({ id, label }) => ({
                 value: id,

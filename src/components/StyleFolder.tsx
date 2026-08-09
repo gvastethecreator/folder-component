@@ -4,6 +4,7 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import {
   createFolderEngineController,
+  loadFolderEngineController,
   type FolderEngineController,
   type FolderEngineOptions,
 } from "../animation/folderEngines";
@@ -267,11 +268,30 @@ function StyleFolder({
     const options = getEngineOptions();
     if (!options) return;
 
-    const controller = createFolderEngineController(options);
-    engineControllerRef.current = controller;
+    if (animationEngine === "css" || animationEngine === "waapi") {
+      const controller = createFolderEngineController(options);
+      engineControllerRef.current = controller;
+      return () => {
+        controller.destroy();
+        if (engineControllerRef.current === controller) engineControllerRef.current = null;
+      };
+    }
+
+    let disposed = false;
+    let controller: FolderEngineController | null = null;
+    void loadFolderEngineController(options).then((loadedController) => {
+      if (disposed) {
+        loadedController.destroy();
+        return;
+      }
+      controller = loadedController;
+      controller.setOpen(isOpenRef.current, true);
+      engineControllerRef.current = controller;
+    });
 
     return () => {
-      controller.destroy();
+      disposed = true;
+      controller?.destroy();
       if (engineControllerRef.current === controller) engineControllerRef.current = null;
     };
   }, [

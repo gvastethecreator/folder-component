@@ -54,11 +54,23 @@ async function openControlSection(page: Page, title: string) {
 test.describe("animation engines and interaction", () => {
   test("switches all five engine labels and folder markers", async ({ page }) => {
     test.setTimeout(60_000);
+    const engineRequests: string[] = [];
+    page.on("request", (request) => {
+      if (/motionFolderEngine|animeFolderEngine/.test(request.url())) {
+        engineRequests.push(request.url());
+      }
+    });
     await openPlayground(page);
+    expect(engineRequests).toEqual([]);
     await openControlSection(page, "Animation & interaction");
     const engineGroup = page.getByRole("group", { name: "Engine" });
     const folders = page.locator(folderSelector);
     await expect(folders).toHaveCount(20);
+
+    await engineGroup.getByRole("button", { name: "Motion", exact: true }).hover();
+    await expect
+      .poll(() => engineRequests.some((url) => /motionFolderEngine/.test(url)))
+      .toBe(true);
 
     for (const [label, marker] of engines) {
       await engineGroup.getByRole("button", { name: label, exact: true }).click();
@@ -81,6 +93,8 @@ test.describe("animation engines and interaction", () => {
       await page.mouse.move(1, 1);
       await expect(folder).toHaveAttribute("aria-expanded", "false");
     }
+
+    expect(engineRequests.some((url) => /animeFolderEngine/.test(url))).toBe(true);
   });
 
   test("opens and closes a folder on pointer hover", async ({ page }) => {

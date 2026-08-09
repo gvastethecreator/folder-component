@@ -2,6 +2,11 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "📥 install",
+      "type": "shell",
+      "command": "pnpm install --frozen-lockfile"
+    },
+    {
       "label": "⚡ dev",
       "type": "shell",
       "command": "pnpm run dev",
@@ -70,13 +75,15 @@
       "command": "pnpm run clean"
     },
     {
-      "label": "✅ check",
-      "dependsOn": ["🔍 lint", "📐 format:check", "🔷 typecheck"],
-      "group": { "kind": "build", "isDefault": true }
+      "label": "🧭 deps",
+      "type": "shell",
+      "command": "pnpm run deps:check"
     },
     {
-      "label": "🚀 verify",
-      "dependsOn": ["✅ check", "🧪 test", "📦 build"]
+      "label": "✅ check",
+      "type": "shell",
+      "command": "pnpm run check",
+      "group": { "kind": "build", "isDefault": true }
     }
   ]
 }

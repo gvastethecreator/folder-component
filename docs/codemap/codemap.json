@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-08-08T11:55:00Z",
-  "generated_from_commit": "989b3e800d10995ee8d0afda25b50615ddb4de4d",
+  "generated_at": "2026-08-09T13:51:17Z",
+  "generated_from_commit": "2536eafeb8c2cbf1e3c8ee61e9227a6eb391129d",
   "scope": [
     "."
   ],
@@ -77,11 +77,13 @@
     {
       "id": "repository",
       "path": "README.md",
-      "role": "Owns the tracked files for the repository module.",
+      "role": "Defines pnpm, dependency, maintenance, verification, and release contracts.",
       "type": "module",
       "boundary": "Repository",
       "entrypoints": [
-        "README.md:Folder Component"
+        "README.md:Folder Component",
+        "docs/dependencies.md:Dependency decisions",
+        "docs/maintenance.md:Maintenance guide"
       ],
       "tests": [],
       "constraints": [
@@ -93,6 +95,14 @@
           {
             "path": "README.md",
             "symbol": "Folder Component"
+          },
+          {
+            "path": "docs/dependencies.md",
+            "symbol": "Dependency decisions"
+          },
+          {
+            "path": "docs/maintenance.md",
+            "symbol": "Maintenance guide"
           }
         ]
       }
@@ -100,11 +110,11 @@
     {
       "id": "scripts",
       "path": "scripts",
-      "role": "Owns the tracked files for the scripts module.",
+      "role": "Owns bounded repository cleanup automation.",
       "type": "service",
       "boundary": "Scripts",
       "entrypoints": [
-        "scripts/clean.ts:targets"
+        "scripts/clean.ts:root"
       ],
       "tests": [],
       "constraints": [
@@ -115,7 +125,7 @@
         "locations": [
           {
             "path": "scripts/clean.ts",
-            "symbol": "targets"
+            "symbol": "root"
           }
         ]
       }
@@ -151,11 +161,14 @@
     {
       "id": "src-animation",
       "path": "src/animation",
-      "role": "Owns the tracked files for the src / animation module.",
+      "role": "Owns shared animation contracts plus lazy Motion and Anime.js adapters.",
       "type": "module",
       "boundary": "Src",
       "entrypoints": [
-        "src/animation/animationTiming.ts:getMotionDuration"
+        "src/animation/animationTiming.ts:getMotionDuration",
+        "src/animation/folderEngines.ts:loadFolderEngineController",
+        "src/animation/motionFolderEngine.ts:createMotionController",
+        "src/animation/animeFolderEngine.ts:createAnimeController"
       ],
       "tests": [
         "src/App.test.tsx",
@@ -171,6 +184,18 @@
           {
             "path": "src/animation/animationTiming.ts",
             "symbol": "getMotionDuration"
+          },
+          {
+            "path": "src/animation/folderEngines.ts",
+            "symbol": "loadFolderEngineController"
+          },
+          {
+            "path": "src/animation/motionFolderEngine.ts",
+            "symbol": "createMotionController"
+          },
+          {
+            "path": "src/animation/animeFolderEngine.ts",
+            "symbol": "createAnimeController"
           }
         ]
       }
@@ -517,12 +542,8 @@
             "symbol": "gsap"
           },
           {
-            "path": "src/animation/folderEngines.ts",
-            "symbol": "motion"
-          },
-          {
-            "path": "src/animation/folderEngines.ts",
-            "symbol": "animejs"
+            "path": "src/animation/folderGeometry.test.ts",
+            "symbol": "vitest"
           }
         ]
       }
@@ -653,6 +674,10 @@
           {
             "path": "src/components/PlaygroundControls.tsx",
             "symbol": "../animation/engineCatalog"
+          },
+          {
+            "path": "src/components/PlaygroundControls.tsx",
+            "symbol": "../animation/folderEngines"
           },
           {
             "path": "src/components/StyleFolder.tsx",
