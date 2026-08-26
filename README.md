@@ -1,9 +1,30 @@
-# Folder Component
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/header/folder.svg?title=Folder+Component&subtitle=Compare+five+animation+engines+on+one+interactive+folder&logo=react&theme=purple&align=center&mode=dark" />
+    <img alt="Folder Component" src="https://shieldcn.dev/header/folder.svg?title=Folder+Component&subtitle=Compare+five+animation+engines+on+one+interactive+folder&logo=react&theme=purple&align=center&mode=light" />
+  </picture>
+</p>
+
+<p align="center">
+  <a href="https://github.com/gvastethecreator/folder-component/actions/workflows/ci.yml"><img alt="CI status" src="https://shieldcn.dev/github/ci/gvastethecreator/folder-component.svg?workflow=CI&branch=main&variant=secondary&size=xs" /></a>
+  <a href="https://github.com/gvastethecreator/folder-component/stargazers"><img alt="GitHub stars" src="https://shieldcn.dev/github/stars/gvastethecreator/folder-component.svg?variant=secondary&size=xs" /></a>
+  <a href="https://github.com/gvastethecreator/folder-component/commits/main"><img alt="Last commit" src="https://shieldcn.dev/github/last-commit/gvastethecreator/folder-component.svg?variant=secondary&size=xs" /></a>
+  <a href="https://gvastethecreator.github.io/folder-component/"><img alt="Live playground" src="https://shieldcn.dev/badge/demo-live-22c55e.svg?logo=githubpages&variant=branded&size=xs" /></a>
+  <a href="LICENSE"><img alt="MIT license" src="https://shieldcn.dev/github/license/gvastethecreator/folder-component.svg?variant=secondary&size=xs" /></a>
+</p>
 
 A browser playground for comparing five animation engines on the same interactive folder
 component: **GSAP**, **Motion**, **Anime.js**, pure **CSS**, and native **WAAPI**.
 
 [Open the live playground](https://gvastethecreator.github.io/folder-component/)
+
+## Product tour
+
+| Five-engine grid                                                                                                                 | Kinetic preset                                                                                                                     |
+| -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| <img src="docs/assets/screenshots/engine-grid.png" alt="Folder Component grid with twenty folders and shared engine controls" /> | <img src="docs/assets/screenshots/kinetic-preset.png" alt="Folder Component using the Anime.js kinetic preset" />                  |
+| **Single-folder studio**                                                                                                         | **Mobile code export**                                                                                                             |
+| <img src="docs/assets/screenshots/single-folder.png" alt="Large Windows 11 folder preview with collection navigation" />         | <img src="docs/assets/screenshots/mobile-code.png" alt="Generated standalone component and folder preview on a narrow viewport" /> |
 
 ## Features
 
@@ -24,7 +45,7 @@ component: **GSAP**, **Motion**, **Anime.js**, pure **CSS**, and native **WAAPI*
 
 ## Quick start
 
-Requires Node.js 22.22.2 or newer and pnpm 11.20.0.
+Use the repository runtime baseline: Node.js 24.15.0 and pnpm 11.21.0.
 
 ```sh
 pnpm install
@@ -67,3 +88,11 @@ variables. Pexels imagery is used under the [Pexels license](https://www.pexels.
 ## License
 
 [MIT](LICENSE)
+
+## Support
+
+<p align="center">
+  <a href="https://github.com/sponsors/gvastethecreator"><img src="https://shieldcn.dev/badge/%E2%9D%A4-sponsor+this+project-red.svg?animate=pulse" alt="Sponsor this project" /></a>
+</p>
+
+Support continued development through [GitHub Sponsors](https://github.com/sponsors/gvastethecreator) or [Ko-fi](https://ko-fi.com/gvaste).

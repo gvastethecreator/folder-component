@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-08-09T13:51:17Z",
-  "generated_from_commit": "2536eafeb8c2cbf1e3c8ee61e9227a6eb391129d",
+  "generated_at": "2026-08-15T09:31:20Z",
+  "generated_from_commit": "1f186a1d7d77f6694321b50c34594025d1ce2c2e",
   "scope": [
     "."
   ],
@@ -77,13 +77,11 @@
     {
       "id": "repository",
       "path": "README.md",
-      "role": "Defines pnpm, dependency, maintenance, verification, and release contracts.",
+      "role": "Owns the tracked files for the repository module.",
       "type": "module",
       "boundary": "Repository",
       "entrypoints": [
-        "README.md:Folder Component",
-        "docs/dependencies.md:Dependency decisions",
-        "docs/maintenance.md:Maintenance guide"
+        "README.md:Product tour"
       ],
       "tests": [],
       "constraints": [
@@ -94,15 +92,7 @@
         "locations": [
           {
             "path": "README.md",
-            "symbol": "Folder Component"
-          },
-          {
-            "path": "docs/dependencies.md",
-            "symbol": "Dependency decisions"
-          },
-          {
-            "path": "docs/maintenance.md",
-            "symbol": "Maintenance guide"
+            "symbol": "Product tour"
           }
         ]
       }
@@ -110,7 +100,7 @@
     {
       "id": "scripts",
       "path": "scripts",
-      "role": "Owns bounded repository cleanup automation.",
+      "role": "Owns the tracked files for the scripts module.",
       "type": "service",
       "boundary": "Scripts",
       "entrypoints": [
@@ -161,14 +151,11 @@
     {
       "id": "src-animation",
       "path": "src/animation",
-      "role": "Owns shared animation contracts plus lazy Motion and Anime.js adapters.",
+      "role": "Owns the tracked files for the src / animation module.",
       "type": "module",
       "boundary": "Src",
       "entrypoints": [
-        "src/animation/animationTiming.ts:getMotionDuration",
-        "src/animation/folderEngines.ts:loadFolderEngineController",
-        "src/animation/motionFolderEngine.ts:createMotionController",
-        "src/animation/animeFolderEngine.ts:createAnimeController"
+        "src/animation/animationTiming.ts:getMotionDuration"
       ],
       "tests": [
         "src/App.test.tsx",
@@ -184,18 +171,6 @@
           {
             "path": "src/animation/animationTiming.ts",
             "symbol": "getMotionDuration"
-          },
-          {
-            "path": "src/animation/folderEngines.ts",
-            "symbol": "loadFolderEngineController"
-          },
-          {
-            "path": "src/animation/motionFolderEngine.ts",
-            "symbol": "createMotionController"
-          },
-          {
-            "path": "src/animation/animeFolderEngine.ts",
-            "symbol": "createAnimeController"
           }
         ]
       }
@@ -520,6 +495,10 @@
           {
             "path": "src/animation/animationTiming.test.ts",
             "symbol": "vitest"
+          },
+          {
+            "path": "src/animation/animeFolderEngine.ts",
+            "symbol": "animejs"
           },
           {
             "path": "src/animation/engineCatalog.ts",

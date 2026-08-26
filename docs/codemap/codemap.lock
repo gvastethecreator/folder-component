@@ -1,7 +1,7 @@
 {
-  "current_commit": "2536eafeb8c2cbf1e3c8ee61e9227a6eb391129d",
+  "source_commit": "1f186a1d7d77f6694321b50c34594025d1ce2c2e",
   "working_tree_dirty": true,
-  "generated_at": "2026-08-09T13:51:17Z",
+  "generated_at": "2026-08-15T09:31:20Z",
   "scanned_scope": [
     "."
   ],
@@ -11,6 +11,7 @@
     ".hg",
     ".next",
     ".nuxt",
+    ".scratch",
     ".svn",
     ".turbo",
     ".venv",
@@ -32,13 +33,13 @@
       "id": ".",
       "path": ".",
       "file_count": 14,
-      "fingerprint": "d18d2e2a80ba50711e68225937560f66c57def1d670a97436bf75c21b07f55be"
+      "fingerprint": "bfc9c7fe8d5d41c31043473d2230c1b0defe2cb3fc3c0fb8b1fd6e305b4f0bf1"
     },
     {
       "id": ".github",
       "path": ".github",
       "file_count": 2,
-      "fingerprint": "40e825831fc1cab63225f4005ee120174f367bb3ab8f50c54e5a510ecc3fe6a5"
+      "fingerprint": "6c9e30e07fad534db2be5e081080641cc88ac9bb9b1eb41d91f1da7779f243c4"
     },
     {
       "id": ".vscode",
@@ -49,8 +50,8 @@
     {
       "id": "docs",
       "path": "docs",
-      "file_count": 7,
-      "fingerprint": "3d2347eb3d37b4a979eba0f5fda28e058552394c06d682d9fab8cfe653bdec11"
+      "file_count": 9,
+      "fingerprint": "3087f5d01e8f3000b691d9b72b4b2686028df6f7746ef808dfb57dcde1ef52fa"
     },
     {
       "id": "e2e",
@@ -79,8 +80,8 @@
     {
       "id": "src",
       "path": "src",
-      "file_count": 23,
-      "fingerprint": "e2b1d7b346f77f786daf04ff9362efbb09581a7bd1b4c7d53f1e860ef3ff1380"
+      "file_count": 25,
+      "fingerprint": "21cad4a59a65c4de69c71aa28745927fafdeb416a717a41e2854be7342018cd8"
     }
   ]
 }
