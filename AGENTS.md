@@ -1,19 +1,27 @@
 # Agent Guide — Folder Component
 
-Standalone static React 19 + Vite 8 (Rolldown) + Tailwind v4 multi-engine playground.
-Pure frontend (no backend, no AI Studio, no API keys). Package manager: **pnpm**; runtime: **Node.js/browser**.
-See `README.md` for the public entrypoint and `docs/architecture.md` for implementation details.
+Static React 19 + Vite 8 (Rolldown) + Tailwind v4 playground. Five animation engines share one folder contract. No backend, no secrets, no env files.
 
-## Agent skills
+Package manager: **pnpm@12.0.0**. Runtime: Node.js baseline 24.15.0 (`engines.node` >=22.22.2). Do not swap pnpm, Vite, React, or Tailwind.
 
-### Issue tracker
+Public entry: `README.md`.
 
-Issues and PRDs live as markdown files under `.scratch/`. See `docs/agents/issue-tracker.md`.
+## Hard rules
 
-### Triage labels
+- Keep shared folder geometry. Do not add engine-specific geometry.
+- Motion and Anime.js stay behind dynamic imports. GSAP, CSS, and WAAPI stay in the initial path.
+- Grid / Single preview is playground chrome. It is not part of `PlaygroundConfig` or the generated export.
+- GitHub Pages uses base `/folder-component/`. Local `dev` and `build` stay root-hosted.
+- Never print or commit secrets. This app has none by design.
 
-Five canonical roles map 1:1 to label strings (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+## Commands
 
-### Domain docs
+- `pnpm install --frozen-lockfile`
+- `pnpm run dev` — http://localhost:3000
+- `pnpm run check` — format, lint, typecheck, unit tests, build
+- `pnpm run test:e2e` — Chromium
+- `pnpm run build:pages` — Pages artifact
 
-Single-context — read `CONTEXT.md` and `docs/adr/` at the repo root (created lazily by `/grill-with-docs` when terms/decisions get resolved). See `docs/agents/domain.md`.
+## Code map
+
+`docs/codemap/` is generated. Refresh it with `maintain-code-map`. Do not hand-edit one artifact.

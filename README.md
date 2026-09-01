@@ -45,7 +45,7 @@ component: **GSAP**, **Motion**, **Anime.js**, pure **CSS**, and native **WAAPI*
 
 ## Quick start
 
-Use the repository runtime baseline: Node.js 24.15.0 and pnpm 11.21.0.
+Use the repository runtime baseline: Node.js 24.15.0 and pnpm 12.0.0.
 
 ```sh
 pnpm install
@@ -68,12 +68,9 @@ pnpm run deps:check
 
 ## Documentation
 
-- [Project readiness baseline](docs/project-readiness.md)
-- [Architecture and engine contract](docs/architecture.md)
+- [Contributing](CONTRIBUTING.md)
+- [Security policy](SECURITY.md)
 - [GitHub Pages deployment](docs/deployment.md)
-- [Known tradeoffs](docs/technical-debt.md)
-- [Dependency decisions and changelogs](docs/dependencies.md)
-- [Maintenance guide](docs/maintenance.md)
 
 The app is fully static. It has no backend, secrets, API keys, or required environment
 variables. Pexels imagery is used under the [Pexels license](https://www.pexels.com/license/).

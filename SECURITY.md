@@ -14,6 +14,6 @@ Include:
 - clear reproduction steps
 - the expected and observed behavior
 - the practical impact
-- a suggested fix, if available
+- a suggested fix, if you have one
 
 This is a static, client-only application. It has no backend, account system, secrets, or image upload service. Reports should still cover dependency, build, browser, and supply-chain risks when they affect users.
